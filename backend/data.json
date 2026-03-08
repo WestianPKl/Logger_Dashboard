@@ -1,0 +1,63 @@
+{{
+	"result": "DATA",
+	"type": "DATA",
+	"timestamp": 825191310,
+	"info": {
+		"ipAddress": "192.168.18.181",
+		"stm32_error": 0,
+		"sht40_error": 0,
+		"bme280_error": 0,
+		"irq_dropped": 0,
+	}
+}
+},
+{ "result": "ALIVE", "type": "STATUS", "timestamp": 825191856, "info": null },
+{
+  result: 'TIME_SYNCED',
+  type: 'STATUS',
+  timestamp: 825191903,
+  info: {
+    rtc_time: '2026-02-23T19:58:23Z',
+    sync_time: '2026-02-23T19:58:23Z'
+  }
+}
+{
+  result: 'INA_READ',
+  type: 'STATUS',
+  timestamp: 825191923,
+  info: { shunt_voltage: 0, bus_voltage: 0, power: 0, current: 0, id: 0 }
+}
+{
+  result: 'RGB_SET',
+  type: 'STATUS',
+  timestamp: 825191935,
+  info: { r: 0, g: 0, b: 0 }
+}
+{
+  result: 'BUZZER_SET',
+  type: 'STATUS',
+  timestamp: 825191945,
+  info: { volume: 0, freq: 0 }
+}
+{
+  result: 'OUTPUT_SET',
+  type: 'STATUS',
+  timestamp: 825191956,
+  info: { channel: 'LED2', value: 0 }
+}
+{
+  result: 'PWM_SET',
+  type: 'STATUS',
+  timestamp: 825191971,
+  info: { channel: 'TIM1_CH1', duty_cycle: 0 }
+}
+{
+  result: 'ERROR',
+  type: 'ERROR',
+  timestamp: 825194478,
+  info: {
+    msg: 'settime failed: [Errno 116] ETIMEDOUT',
+    timestamp: 825194478,
+    source: 'NTP'
+  }
+}

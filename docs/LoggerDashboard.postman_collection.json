@@ -1,0 +1,3217 @@
+{
+  "info": {
+    "_postman_id": "2b4192a5-e4dd-45ae-ad3f-5234c44e812e",
+    "name": "LoggerDashboard",
+    "description": "API request test for Logger Dashboard Backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "39968598"
+  },
+  "item": [
+    {
+      "name": "Equipment",
+      "item": [
+        {
+          "name": "Get Equ Types",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-types",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-types"
+              ]
+            },
+            "description": "Get all equipment types (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-type/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-type",
+                "1"
+              ]
+            },
+            "description": "Get one equipment type by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Type",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Logger12\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-type",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-type"
+              ]
+            },
+            "description": "Add new equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equ Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Logger134\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-type/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-type",
+                "5"
+              ]
+            },
+            "description": "Update existing equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-type/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-type",
+                "5"
+              ]
+            },
+            "description": "Delete existing equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Vendors",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-vendors",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-vendors"
+              ]
+            },
+            "description": "Get all equipment vendors (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Vendor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-vendor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-vendor",
+                "1"
+              ]
+            },
+            "description": "Get one equipment vendor by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Vendor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"VendorNumber1\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-vendor",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-vendor"
+              ]
+            },
+            "description": "Add new equipment vendor."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equ Vendor",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEF\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-vendor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-vendor",
+                "1"
+              ]
+            },
+            "description": "Update existing equipment vendor."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ Vendor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-vendor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-vendor",
+                "1"
+              ]
+            },
+            "description": "Delete existing equipment vendor."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Models",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-models",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-models"
+              ]
+            },
+            "description": "Get all equipment models (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Model",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-model/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-model",
+                "1"
+              ]
+            },
+            "description": "Get one equipment model by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Model",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABC\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-models",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-models"
+              ]
+            },
+            "description": "Add new equipment model."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equ Model",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEF\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-model/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-model",
+                "1"
+              ]
+            },
+            "description": "Update existing equipment model."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ Model",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-model/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-model",
+                "1"
+              ]
+            },
+            "description": "Delete existing equipment model."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equipments",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipments",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipments"
+              ]
+            },
+            "description": "Get all equipment (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equipments Admin",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipments-admin",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipments-admin"
+              ]
+            },
+            "description": "Get all equipment (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equipment",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipment/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipment",
+                "1"
+              ]
+            },
+            "description": "Get one equipment by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equipment",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"serialNumber\": \"12ABC\",\r\n    \"model\": \"12-1\",\r\n    \"equVendorId\": 2,\r\n    \"equModelId\": 2,\r\n    \"equTypeId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipment",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipment"
+              ]
+            },
+            "description": "Add new equipment."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equipment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"serialNumber\": \"13DEF\",\r\n    \"equVendorId\": 3,\r\n    \"equModelId\": 3,\r\n    \"equTypeId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipment/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipment",
+                "1"
+              ]
+            },
+            "description": "Update existing equipment."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equipment",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipment/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipment",
+                "1"
+              ]
+            },
+            "description": "Delete existing equipment."
+          },
+          "response": []
+        },
+        {
+          "name": "Restore Equipment",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equipment-restore/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equipment-restore",
+                "1"
+              ]
+            },
+            "description": "Update existing equipment."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Unused Loggers",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-unused-loggers",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-unused-loggers"
+              ]
+            },
+            "description": "Get all unused loggers (not assigned in House Logger table)."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Sensor Function",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equSensorId\": 2,\r\n    \"dataDefinitionId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/equ-sensor-function",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "equ-sensor-function"
+              ]
+            },
+            "description": "Assign function to equipment sensor."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ SensorFunction",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equSensorId\": 1,\r\n    \"dataDefinitionId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equ-sensor-function/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equ-sensor-function",
+                "1"
+              ]
+            },
+            "description": "Delete function from equipment sensor"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Stats",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-stats",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-stats"
+              ]
+            },
+            "description": "Get all equipment types (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Stat",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-stat/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-stat",
+                "1"
+              ]
+            },
+            "description": "Get one equipment type by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Stat",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\": 1,\r\n    \"lastSeen\": \"2026-05-20\",\r\n    \"fwContr\": \"0.0.1\",\r\n    \"hwContr\": \"0.0.1\",\r\n    \"buildContr\": \"2025\",\r\n    \"prodContr\": \"2025\",\r\n    \"fwCom\": \"0.0.1\",\r\n    \"hwCom\": \"0.0.1\",\r\n    \"buildCom\": \"2025\",\r\n    \"prodCom\": \"2025\",\r\n    \"ipAddress\": \"192.168.2.2\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-stat",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-stat"
+              ]
+            },
+            "description": "Add new equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equ Stat",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\": 1,\r\n    \"lastSeen\": \"2026-05-20\",\r\n    \"fwContr\": \"0.0.1\",\r\n    \"hwContr\": \"0.0.1\",\r\n    \"buildContr\": \"2025\",\r\n    \"prodContr\": \"2025\",\r\n    \"fwCom\": \"0.0.1\",\r\n    \"hwCom\": \"0.0.1\",\r\n    \"buildCom\": \"2025\",\r\n    \"prodCom\": \"2025\",\r\n    \"ipAddress\": \"192.168.2.2\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-stat/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-stat",
+                "5"
+              ]
+            },
+            "description": "Update existing equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ Stat",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-stat/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-stat",
+                "5"
+              ]
+            },
+            "description": "Delete existing equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Logs",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-logs",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-logs"
+              ]
+            },
+            "description": "Get all equipment types (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Equ Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-log/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-log",
+                "1"
+              ]
+            },
+            "description": "Get one equipment type by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Equ Log",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\": 1,\r\n    \"message\": \"Test\",\r\n    \"type\": \"STATUS\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-log",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-log"
+              ]
+            },
+            "description": "Add new equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Equ Log",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equipmentId\": 1,\r\n    \"message\": \"Test\",\r\n    \"type\": \"STATUS\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-log/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-log",
+                "5"
+              ]
+            },
+            "description": "Update existing equipment type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Equ Log",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/equipment/equ-log/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "equipment",
+                "equ-log",
+                "5"
+              ]
+            },
+            "description": "Delete existing equipment type."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API requests for Equipment module.",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "exec": [
+              ""
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "packages": {},
+            "exec": [
+              ""
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Users",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/user/users",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "users"
+              ]
+            },
+            "description": "Get all users (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get User",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/user/user/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "user",
+                "1"
+              ]
+            },
+            "description": "Get one user type by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Register",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"Piotr\",\r\n    \"email\": \"piotr.klys92@gmail.com\",\r\n    \"password\": \"piotr\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/user/user-login",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "user-login"
+              ]
+            },
+            "description": "Create a new account."
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();\r",
+                  "const bodyToken = responseJson.data.token;\r",
+                  "pm.collectionVariables.set(\"bodyToken\", bodyToken);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"Piotr\",\r\n    \"password\": \"piotr\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/user/user-login",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "user-login"
+              ]
+            },
+            "description": "Log in with existing account."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Profile",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"username\": \"Piotr\",\r\n    \"email\": \"piotr.klys92@gmail.com\",\r\n    \"password\": \"piotr\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/user/user/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "user",
+                "1"
+              ]
+            },
+            "description": "Update account profile."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API requests for Authentication module."
+    },
+    {
+      "name": "House",
+      "item": [
+        {
+          "name": "Get Houses",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/houses",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "houses"
+              ]
+            },
+            "description": "Get all houses (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get House",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/house/house/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house",
+                "1"
+              ]
+            },
+            "description": "Get one house by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add House",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABC\",\r\n    \"postalCode\": \"00-000\",\r\n    \"city\": \"Krakow\",\r\n    \"street\": \"DDDFF\",\r\n    \"houseNumber\": \"2\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house"
+              ]
+            },
+            "description": "Add new house."
+          },
+          "response": []
+        },
+        {
+          "name": "Update House",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEF\",\r\n    \"postalCode\": \"11-111\",\r\n    \"city\": \"Krakow\",\r\n    \"street\": \"FFDD\",\r\n    \"houseNumber\": \"3\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house/2",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house",
+                "2"
+              ]
+            },
+            "description": "Update existing house."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete House",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/house/house/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house",
+                "1"
+              ]
+            },
+            "description": "Delete existing house."
+          },
+          "response": []
+        },
+        {
+          "name": "Get House Floors",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-floors",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floors"
+              ]
+            },
+            "description": "Get all house floors (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get House Floor",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/house/house-floor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floor",
+                "1"
+              ]
+            },
+            "description": "Get one house floor by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add House Floor",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABC\",\r\n    \"layout\": \"ADBDR\",\r\n    \"houseId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-floor",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floor"
+              ]
+            },
+            "description": "Add new house floor."
+          },
+          "response": []
+        },
+        {
+          "name": "Update House Floor",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Piętro 1\",\r\n    \"layout\": \"\",\r\n    \"houseId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-floor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floor",
+                "1"
+              ]
+            },
+            "description": "Update existing house floor."
+          },
+          "response": []
+        },
+        {
+          "name": "Update House Floor Layout",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "\r\n{\r\n    \"x\": 1,\r\n    \"y\": 2,\r\n    \"zoom\": 2,\r\n    \"posX\": 2,\r\n    \"posY\": 3,\r\n    \"loggers\": [{\"id\": 1, \"posX\": 1, \"posY\": 2}]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-floor-layout/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floor-layout",
+                "1"
+              ]
+            },
+            "description": "Update existing house floor layout (tree)."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete House Floor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/house/house-floor/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-floor",
+                "1"
+              ]
+            },
+            "description": "Delete existing house floor."
+          },
+          "response": []
+        },
+        {
+          "name": "Get House Loggers",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-loggers",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-loggers"
+              ]
+            },
+            "description": "Get all house loggers (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get House Logger",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/house/house-logger/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-logger",
+                "1"
+              ]
+            },
+            "description": "Get one house logger by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add House Logger",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equLoggerId\": 1,\r\n    \"houseFloorId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-logger",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-logger"
+              ]
+            },
+            "description": "Add new house logger."
+          },
+          "response": []
+        },
+        {
+          "name": "Update House Logger",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"equLoggerId\": 2,\r\n    \"houseFloorId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-logger/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-logger",
+                "1"
+              ]
+            },
+            "description": "Update existing house logger."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete House Logger",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/house/house-logger/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "house",
+                "house-logger",
+                "1"
+              ]
+            },
+            "description": "Delete existing house logger."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API requests for House module."
+    },
+    {
+      "name": "Data",
+      "item": [
+        {
+          "name": "Get Data Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const responseJson = pm.response.json();\r",
+                  "const dataToken = responseJson.data.token;\r",
+                  "pm.collectionVariables.set(\"dataToken\", dataToken);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  ""
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-token",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-token"
+              ]
+            },
+            "description": "Get data token (for loggers use only)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Definitions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-definitions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-definitions"
+              ]
+            },
+            "description": "Get all data definitions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Definition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-definition",
+                "1"
+              ]
+            },
+            "description": "Get one data definition by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Data Definition",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABCD\",\r\n    \"unit\": \"V\",\r\n    \"description\": \"ABCD measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-definition",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-definition"
+              ]
+            },
+            "description": "Add new data definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Data Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\",\r\n    \"unit\": \"A\",\r\n    \"description\": \"DEFG measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-definition/4",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-definition",
+                "4"
+              ]
+            },
+            "description": "Update existing data definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Data Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-definition",
+                "1"
+              ]
+            },
+            "description": "Delete existing data definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Logs",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-logs",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-logs"
+              ]
+            },
+            "description": "Get all data logs (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-log/2",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-log",
+                "2"
+              ]
+            },
+            "description": "Get one data log by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Data Log",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{dataToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "[{\r\n    \"value\": 23.54,\r\n    \"dataDefinitionId\": 1,\r\n    \"definition\": \"temperature\",\r\n    \"equLoggerId\": 1,\r\n    \"equSensorId\": 4,\r\n    \"time\": \"2024-02-14 09:00\"\r\n}]",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-log",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-log"
+              ]
+            },
+            "description": "Add new data log."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Data Log",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"value\": 23,\r\n    \"dataDefinitionId\": 1,\r\n    \"equLoggerId\": 1,\r\n    \"equSensorId\": 4,\r\n    \"time\": \"2024-02-14 09:00\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-log/2",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-log",
+                "2"
+              ]
+            },
+            "description": "Update existing data log."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Data Log",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-log/3",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-log",
+                "3"
+              ]
+            },
+            "description": "Delete existing data log."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Last Values",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-values",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-values"
+              ]
+            },
+            "description": "Get all last values (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Last Values View",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-values-view",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-values-view"
+              ]
+            },
+            "description": "Get all last values (filter data by json body) - view informations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Last Values Multi",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"loggersId\": [1,2,3]\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-values-multi",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-values-multi"
+              ]
+            },
+            "description": "Get all last values (filter by equ loggers Ids) - view informations."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Connected Sensor View",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-connected-sensor-view",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-connected-sensor-view"
+              ]
+            },
+            "description": "Get all currently connected sensors (last values)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Logs View",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-logs-view",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-logs-view"
+              ]
+            },
+            "description": "Get all logs (definitions as columns)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Data Last Value",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-value/4",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-value",
+                "4"
+              ]
+            },
+            "description": "Get one data last value by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Data Last Value",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"dataLogId\": 9,\r\n    \"equLoggerId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-value",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-value"
+              ]
+            },
+            "description": "Add new data last value."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Data Last Value",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"dataLogId\": 2,\r\n    \"equLoggerId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-value/4",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-value",
+                "4"
+              ]
+            },
+            "description": "Update existing data last value."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Data Last Value",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/data/data-last-value/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "data",
+                "data-last-value",
+                "5"
+              ]
+            },
+            "description": "Delete existing data last value."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API requests for Data module."
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Get Admin Functionality Definitions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-functionality-definitions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-functionality-definitions"
+              ]
+            },
+            "description": "Get all admin functionality definitions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Functionality Definition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-functionality-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-functionality-definition",
+                "1"
+              ]
+            },
+            "description": "Get one admin functionality definition by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Functionality Definition",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABCD\",\r\n    \"description\": \"ABCD measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-functionality-definition",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-functionality-definition"
+              ]
+            },
+            "description": "Add new admin functionality definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin Functionality Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\",\r\n    \"description\": \"DEFG measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-functionality-definition/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-functionality-definition",
+                "5"
+              ]
+            },
+            "description": "Update existing admin functionality definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Functionality Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-functionality-definition/5",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-functionality-definition",
+                "5"
+              ]
+            },
+            "description": "Delete existing admin functionality definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Object Definitions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-object-definitions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-object-definitions"
+              ]
+            },
+            "description": "Get all admin object definitions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Object Definition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-object-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-object-definition",
+                "1"
+              ]
+            },
+            "description": "Get one admin object definition by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Object Definition",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABCD\",\r\n    \"description\": \"ABCD measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-object-definition",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-object-definition"
+              ]
+            },
+            "description": "Add new admin object definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin Object Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\",\r\n    \"description\": \"DEFG measurement\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-object-definition/17",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-object-definition",
+                "17"
+              ]
+            },
+            "description": "Update existing admin object definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Object Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-object-definition/17",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-object-definition",
+                "17"
+              ]
+            },
+            "description": "Delete existing admin object definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Access Level Definitions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-accessLevel-definitions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-accessLevel-definitions"
+              ]
+            },
+            "description": "Get all admin access level definitions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Access Level Definition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-accessLevel-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-accessLevel-definition",
+                "1"
+              ]
+            },
+            "description": "Get one admin access level definition by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Access Level Definition",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABCD\",\r\n    \"accessLevel\": 5\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-accessLevel-definition",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-accessLevel-definition"
+              ]
+            },
+            "description": "Add new admin access level definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin Access Level Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\",\r\n    \"accessLevel\": 6\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-accessLevel-definition/6",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-accessLevel-definition",
+                "6"
+              ]
+            },
+            "description": "Update existing admin access level definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Access Level Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-accessLevel-definition/6",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-accessLevel-definition",
+                "6"
+              ]
+            },
+            "description": "Delete existing admin access level definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Roles",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-roles",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-roles"
+              ]
+            },
+            "description": "Get all admin roles (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Role",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role",
+                "1"
+              ]
+            },
+            "description": "Get one admin role by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Role",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"ABCD\",\r\n    \"description\": \"ABCD description\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role"
+              ]
+            },
+            "description": "Add new admin role."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Admin Role",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\",\r\n    \"description\": \"DEFG description\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role",
+                "1"
+              ]
+            },
+            "description": "Update existing admin role."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Role",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role",
+                "1"
+              ]
+            },
+            "description": "Delete existing admin role."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Role User",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"roleId\": 2,\r\n    \"userId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role-user",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role-user"
+              ]
+            },
+            "description": "Add new admin role user."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Role User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-role-user/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-role-user",
+                "1"
+              ]
+            },
+            "description": "Delete existing admin role user."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Admin Permissions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-permission",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-permission"
+              ]
+            },
+            "description": "Get all admin permissions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Admin Permission",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"userId\": 1,\r\n    \"admFunctionalityDefinitionId\": 1,\r\n    \"admObjectDefinitionId\": 1,\r\n    \"admAccessLevelDefinitionId\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-permissions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-permissions"
+              ]
+            },
+            "description": "Add new admin permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Admin Permission",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/adm/adm-permission/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "adm",
+                "adm-permission",
+                "1"
+              ]
+            },
+            "description": "Delete existing admin permission."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete User",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/user/user/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "user",
+                "user",
+                "1"
+              ]
+            },
+            "description": "Delete existing user account."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API requests for Admin module."
+    },
+    {
+      "name": "Process",
+      "item": [
+        {
+          "name": "Get Process Types",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-types",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-types"
+              ]
+            },
+            "description": "Get all process types (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Process Type",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/process/process-type/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-type",
+                "1"
+              ]
+            },
+            "description": "Get one process type by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Process Type",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"Maintenance\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-type",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-type"
+              ]
+            },
+            "description": "Add new process type."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Process Type",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"name\": \"DEFG\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-type/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-type",
+                "1"
+              ]
+            },
+            "description": "Update existing process type."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Process Type",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/process/process-type/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-type",
+                "1"
+              ]
+            },
+            "description": "Delete existing process type."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Process Definitions",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-definitions",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-definitions"
+              ]
+            },
+            "description": "Get all process definitions (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Process Definition",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/process/process-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-definition",
+                "1"
+              ]
+            },
+            "description": "Get one process definition by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Process Definition",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"processTypeId\": 2,\r\n    \"name\": \"ABCD\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-definition",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-definition"
+              ]
+            },
+            "description": "Add new process definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Process Definition",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"processTypeId\": 3,\r\n    \"name\": \"DEFG\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/process/process-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-definition",
+                "1"
+              ]
+            },
+            "description": "Update existing process definition."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Process Definition",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/process/process-definition/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "process",
+                "process-definition",
+                "1"
+              ]
+            },
+            "description": "Delete existing process definition."
+          },
+          "response": []
+        }
+      ],
+      "description": "Contains API for Process Module."
+    },
+    {
+      "name": "Common",
+      "item": [
+        {
+          "name": "Get Error Logs",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/common/error-logs",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "common",
+                "error-logs"
+              ]
+            },
+            "description": "Get all error logs (filter data by json body)."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Error Log",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}api/common/error-log/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "common",
+                "error-log",
+                "1"
+              ]
+            },
+            "description": "Get one error log by ID."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Error Log",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"message\": \"ABC\",\r\n    \"type\": \"DB\",\r\n    \"severity\": \"Error\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/common/error-log",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "common",
+                "error-log"
+              ]
+            },
+            "description": "Add new error log."
+          },
+          "response": []
+        },
+        {
+          "name": "Update Error Log",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"message\": \"ABC\",\r\n    \"type\": \"DB\",\r\n    \"severity\": \"Error\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/common/error-log/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "common",
+                "error-log",
+                "1"
+              ]
+            },
+            "description": "Update existing error log."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Error Log",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n    \"id\": 1\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/common/error-log/1",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "common",
+                "error-log",
+                "1"
+              ]
+            },
+            "description": "Delete existing error log."
+          },
+          "response": []
+        }
+      ],
+      "description": "Common API"
+    },
+    {
+      "name": "MQTT",
+      "item": [
+        {
+          "name": "MQTT Command",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "// {\r\n//     \"command\": \"PING\",\r\n//     \"parameters\": {}\r\n// }\r\n// {\r\n//     \"command\": \"SYNC_TIME\",\r\n//     \"parameters\": {}\r\n// }\r\n// {\r\n//     \"command\": \"READ_INA\",\r\n//     \"parameters\": {}\r\n// }\r\n// {\r\n//     \"command\": \"RESET\",\r\n//     \"parameters\": {}\r\n// }\r\n// {\r\n//     \"command\": \"RGB\",\r\n//     \"parameters\": {    \r\n//         \"r\": 0,\r\n//         \"g\": 0,\r\n//         \"b\": 0\r\n//     }\r\n// }\r\n// {\r\n//     \"command\": \"BUZZER\",\r\n//     \"parameters\": {    \r\n//         \"freq\": 0,\r\n//         \"volume\": 0\r\n//     }\r\n// }\r\n// {\r\n//     \"command\": \"SET_OUTPUT\",\r\n//     \"parameters\": {    \r\n//         \"channel\": \"LED2\",\r\n//         \"value\": 0\r\n//     }\r\n// }\r\n// {\r\n//     \"command\": \"SET_PWM\",\r\n//     \"parameters\": {    \r\n//         \"channel\": \"TIM1_CH1\",\r\n//         \"duty_cycle\": 0\r\n//     }\r\n// }\r\n// {\r\n//     \"command\": \"READ_INPUTS\",\r\n//     \"parameters\": {    \r\n//     }\r\n// }",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}api/mqtt/376/cmd",
+              "host": [
+                "{{base_url}}api"
+              ],
+              "path": [
+                "mqtt",
+                "376",
+                "cmd"
+              ]
+            },
+            "description": "Get all error logs (filter data by json body)."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{bodyToken}}",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "bodyToken",
+      "value": ""
+    },
+    {
+      "key": "base_url",
+      "value": ""
+    },
+    {
+      "key": "dataToken",
+      "value": ""
+    }
+  ]
+}

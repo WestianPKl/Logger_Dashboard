@@ -1,0 +1,280 @@
+[
+	{
+		"module": "Equipment",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get equipment or equipment types, models and vendors"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equType",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update equipment types"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equType",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete equipment types"
+			},
+
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equVendor",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update equipment vendors"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equVendor",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete equipment vendors"
+			},
+
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equModel",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update equipment models"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equModel",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete equipment models"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equEquipment",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update equipments"
+			},
+			{
+				"admFunctionalityDefinition": "equ",
+				"admObjectDefinition": "equEquipment",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete equipments"
+			}
+		]
+	},
+	{
+		"module": "House",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get houses, floors, rooms, loggers and sensors"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseHouse",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update houses"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseHouse",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete houses"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseFloor",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update floors"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseFloor",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete floors"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseLogger",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update loggers"
+			},
+			{
+				"admFunctionalityDefinition": "house",
+				"admObjectDefinition": "houseLogger",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete loggers"
+			}
+		]
+	},
+	{
+		"module": "Data",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "data",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get data definition, data log and data last value"
+			},
+			{
+				"admFunctionalityDefinition": "data",
+				"admObjectDefinition": "dataDefinition",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update data definitions"
+			},
+			{
+				"admFunctionalityDefinition": "data",
+				"admObjectDefinition": "dataDefinition",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete data definitions"
+			},
+			{
+				"admFunctionalityDefinition": "data",
+				"admObjectDefinition": "dataLog",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update data logs"
+			},
+			{
+				"admFunctionalityDefinition": "data",
+				"admObjectDefinition": "dataLog",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete data logs"
+			}
+		]
+	},
+	{
+		"module": "Admin",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get functionality, object and access level definitions, get roles and permissions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admFunctionalityDefinition",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update functionality definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admFunctionalityDefinition",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete functionality definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admObjectDefinition",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update object definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admObjectDefinition",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete object definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admAccessLevelDefinition",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update access level definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admAccessLevelDefinition",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete access level definitions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admRole",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update roles"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admRole",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete roles"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admRoleUser",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update role users"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admRoleUser",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete role users"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admPermission",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update permissions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admPermission",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete permissions"
+			},
+			{
+				"admFunctionalityDefinition": "adm",
+				"admObjectDefinition": "admUsers",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete user"
+			}
+		]
+	},
+	{
+		"module": "Common",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "common",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get users"
+			}
+		]
+	},
+	{
+		"module": "Process",
+		"permissions": [
+			{
+				"admFunctionalityDefinition": "process",
+				"admObjectDefinition": null,
+				"admAccessLevelDefinition": "READ",
+				"description": "Get process types and definitions"
+			},
+			{
+				"admFunctionalityDefinition": "process",
+				"admObjectDefinition": "processType",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update process types"
+			},
+			{
+				"admFunctionalityDefinition": "process",
+				"admObjectDefinition": "processType",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete process types"
+			},
+			{
+				"admFunctionalityDefinition": "process",
+				"admObjectDefinition": "processDefinition",
+				"admAccessLevelDefinition": "WRITE",
+				"description": "Add/Update process definitions"
+			},
+			{
+				"admFunctionalityDefinition": "process",
+				"admObjectDefinition": "processDefinition",
+				"admAccessLevelDefinition": "DELETE",
+				"description": "Delete process definitions"
+			}
+		]
+	}
+]

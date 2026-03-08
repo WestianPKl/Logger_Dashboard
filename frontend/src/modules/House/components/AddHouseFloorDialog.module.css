@@ -1,0 +1,22 @@
+.imgHolder {
+	margin-top: 1rem;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	flex-direction: column;
+}
+
+.img,
+.img_action {
+	margin-top: 0.2em;
+}
+
+.img {
+	width: 100px;
+}
+
+@media (min-width: 576px) {
+	.img {
+		width: 150px;
+	}
+}
