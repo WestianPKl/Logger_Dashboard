@@ -1,17 +1,18 @@
 #include "outputs.h"
+#include "systick.h"
 
 // PC4 -> ESP32 status out
 // External: PC0..PC3, PB12
-#define PC0_PIN 0U
-#define PC1_PIN 1U
-#define PC2_PIN 2U
-#define PC3_PIN 3U
-#define PC4_PIN 4U
+#define PC0_PIN 0U //Connector output
+#define PC1_PIN 1U //Connector output
+#define PC2_PIN 2U //Connector output
+#define PC3_PIN 3U //Connector output 
+#define PC4_PIN 4U //ESP32 status output
 
-#define PB2_PIN 2U
-#define PB12_PIN 12U
-#define PB13_PIN 13U
-#define PB14_LED 14U
+#define PB2_PIN 2U // ESP32 GPIO01 output
+#define PB12_PIN 12U //Connector output
+#define PB13_PIN 13U //ESP32 reset output
+#define PB14_LED 14U 
 #define PB15_LED 15U
 
 void portc_init(void)
@@ -60,4 +61,10 @@ void esp32_status_set(uint8_t status)
 {
     if (status) pin_set_high('C', PC4_PIN);
     else        pin_set_low('C', PC4_PIN);
+}
+
+void esp32_reset(void){
+    pin_set_high('B', PB13_PIN);
+    systick_delay_ms(100);
+    pin_set_low('B', PB13_PIN);
 }

@@ -3,7 +3,7 @@
 #define SPI1_CS_PORT   GPIOA
 #define SPI1_CS_PIN    4U
 
-// SPI1: PA4 = CS, PA5 = SCK, PA6 = MISO, PA7 = MOSI
+// SPI1: PA4 = CS_BME, PA5 = SCK, PA6 = MISO, PA7 = MOSI
 
 #define SPI1_SCK_PIN    5U
 #define SPI1_MISO_PIN   6U

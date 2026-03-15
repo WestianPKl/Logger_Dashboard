@@ -9,5 +9,6 @@ uint8_t esp32_status_get(void);
 
 void btn1_irq_init(void);
 void btn2_irq_init(void);
+void mfp_irq_init(void);
 
 #endif // INPUTS_H

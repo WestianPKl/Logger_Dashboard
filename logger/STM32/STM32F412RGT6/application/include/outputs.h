@@ -11,5 +11,6 @@ void pin_set_high(uint8_t port, uint8_t pin);
 void pin_set_low(uint8_t port, uint8_t pin);
 
 void esp32_status_set(uint8_t status);
+void esp32_reset(void);
 
 #endif // OUTPUTS_H

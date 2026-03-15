@@ -1,0 +1,418 @@
+USB COMMANDS - ESP32 / STM32 CONFIGURATOR
+
+Format:
+COMMAND,arg1,arg2,...
+
+Notes:
+- Komendy są rozdzielane przecinkami.
+- Parser zamienia nazwę komendy na uppercase.
+- Wartości liczbowe dla części komend mogą być podane dziesiętnie albo hex, np. 223 albo 0xDF.
+- Dla parametrów tekstowych nie używaj przecinka wewnątrz wartości.
+- Część komend działa tylko wtedy, gdy aktywny jest SERVICE MODE.
+- Przy wyłączonym SERVICE MODE komendy serwisowe zwracają ERR:..._SERVICE_MODE_DISABLED.
+
+==================================================
+PUBLIC COMMANDS
+==================================================
+
+1. PING
+Args: none
+Example:
+PING
+
+Response:
+STATUS:ALIVE,<version>,<build>
+
+--------------------------------------------------
+
+2. SYNC_TIME
+Args: none
+Example:
+SYNC_TIME
+
+Response:
+OK:SYNC_TIME,<sync_time>,<rtc_time>
+
+--------------------------------------------------
+
+3. READ_RTC
+Args: none
+Example:
+READ_RTC
+
+Response:
+OK:READ_RTC,<rtc_time>
+
+--------------------------------------------------
+
+4. READ_INPUTS
+Args: none
+Example:
+READ_INPUTS
+
+Response:
+OK:READ_INPUTS,{'BTN1': 0/1, 'BTN2': 0/1, 'ESP32_STATUS': 0/1}
+
+--------------------------------------------------
+
+5. SET_OUTPUT
+Args:
+- channel_name
+- value (0 or 1)
+
+Available channels:
+- LED1
+- LED2
+- PB12
+- PC0
+- PC1
+- PC2
+- PC3
+- ESP32_STATUS
+
+Example:
+SET_OUTPUT,LED1,1
+
+Response:
+OK:SET_OUTPUT,LED1,1
+
+--------------------------------------------------
+
+6. SET_PWM
+Args:
+- channel_name
+- duty_cycle
+
+Available channels:
+- TIM1_CH1
+- TIM2_CH3
+- TIM4_CH3
+- TIM4_CH4
+
+Example:
+SET_PWM,TIM1_CH1,128
+
+Response:
+OK:SET_PWM,TIM1_CH1,128
+
+--------------------------------------------------
+
+7. RGB
+Args:
+- r (0..255)
+- g (0..255)
+- b (0..255)
+- brightness (0..100)
+
+Example:
+RGB,255,0,0,100
+
+Response:
+OK:RGB,255,0,0,100
+
+--------------------------------------------------
+
+8. BUZZER
+Args:
+- freq
+- volume
+
+Example:
+BUZZER,1000,50
+
+Response:
+OK:BUZZER,1000,50
+
+--------------------------------------------------
+
+9. READ_INA
+Args: none
+Example:
+READ_INA
+
+Response:
+OK:READ_INA,<bus_voltage>,<shunt_voltage>,<current>,<power>,<id>
+
+--------------------------------------------------
+
+10. READ_SHT40
+Args: none
+Example:
+READ_SHT40
+
+Response:
+OK:READ_SHT40,<temperature>,<humidity>
+
+--------------------------------------------------
+
+11. READ_BME280
+Args: none
+Example:
+READ_BME280
+
+Response:
+OK:READ_BME280,<temperature>,<humidity>,<pressure>
+
+--------------------------------------------------
+
+12. READ_FLAGS
+Args: none
+Example:
+READ_FLAGS
+
+Response:
+OK:READ_FLAGS,{
+  'FRAM_FLAG_EXT_RTC_PRESENT': 0/1,
+  'FRAM_FLAG_FLASH_PRESENT': 0/1,
+  'FRAM_FLAG_DISPLAY_PRESENT': 0/1,
+  'FRAM_FLAG_SHT40_PRESENT': 0/1,
+  'FRAM_FLAG_BME280_PRESENT': 0/1,
+  'FRAM_FLAG_INA226_PRESENT': 0/1,
+  'FRAM_FLAG_ADC_PRESENT': 0/1,
+  'WIFI_ENABLED': 0/1
+}
+
+--------------------------------------------------
+
+13. READ_CONFIG
+Args: none
+Example:
+READ_CONFIG
+
+Response:
+OK:READ_CONFIG,{
+  'logger_id': '...',
+  'sensor_id': '...',
+  'wifi_ssid': '...',
+  'wifi_password': '***',
+  'mqtt_server': '...',
+  'ntp_server': '...',
+  'mqtt_user': '***',
+  'mqtt_password': '***'
+}
+
+==================================================
+SERVICE MODE COMMANDS
+==================================================
+
+14. SERVICE_MODE_ENABLE
+Args:
+- password
+
+Example:
+SERVICE_MODE_ENABLE,ABCDEF1234
+
+Response on success:
+OK:SERVICE_MODE_ENABLE,300
+
+Response on failure:
+ERR:SERVICE_MODE_ENABLE
+
+Response if already enabled:
+ERR:SERVICE_MODE_ENABLE_ALREADY_ENABLED
+
+--------------------------------------------------
+
+15. SERVICE_MODE_DISABLE
+Args: none
+Example:
+SERVICE_MODE_DISABLE
+
+Response:
+OK:SERVICE_MODE_DISABLE
+
+If service mode is not enabled:
+ERR:SERVICE_MODE_DISABLE_NOT_ENABLED
+
+--------------------------------------------------
+
+16. RESET
+Args: none
+Example:
+RESET
+
+Response:
+OK:RESET
+
+If service mode is disabled:
+ERR:RESET_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+17. WRITE_FRAM
+Args:
+- address
+- byte1
+- byte2
+- ...
+- byteN
+
+Rules:
+- 1..16 bajtów danych
+- adres może być decimal albo hex
+
+Examples:
+WRITE_FRAM,512,1,2,3,4
+WRITE_FRAM,0x200,0x01,0x02,0x03,0x04
+
+Response:
+OK:WRITE_FRAM,<address>,<ok>
+
+If service mode is disabled:
+ERR:WRITE_FRAM_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+18. READ_FRAM
+Args:
+- address
+- length
+
+Rules:
+- length 1..16
+- adres może być decimal albo hex
+
+Examples:
+READ_FRAM,512,4
+READ_FRAM,0x200,4
+
+Response:
+OK:READ_FRAM,<address>,[data...]
+
+If service mode is disabled:
+ERR:READ_FRAM_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+19. WRITE_FLAGS
+Args:
+- flags_byte
+- wifi_enabled
+
+Rules:
+- flags_byte: 0..255, decimal albo hex
+- wifi_enabled: 0 lub 1
+
+Examples:
+WRITE_FLAGS,223,1
+WRITE_FLAGS,0xDF,1
+
+Response:
+OK:WRITE_FLAGS,<flags_byte>,<ok>
+
+Possible errors:
+ERR:WRITE_FLAGS_SERVICE_MODE_DISABLED
+ERR:WRITE_FLAGS_FORMAT
+ERR:WRITE_FLAGS_VALUE
+ERR:WRITE_FLAGS_WIFI_VALUE
+
+--------------------------------------------------
+
+20. WRITE_IDS
+Args:
+- logger_id
+- sensor_id
+
+Example:
+WRITE_IDS,1,2
+
+Response:
+OK:WRITE_IDS,1,2,1
+
+If service mode is disabled:
+ERR:WRITE_IDS_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+21. WRITE_WIFI
+Args:
+- wifi_ssid
+- wifi_password
+
+Example:
+WRITE_WIFI,xx,yyy
+
+Response:
+OK:WRITE_WIFI,xx,y*y,1
+
+If service mode is disabled:
+ERR:WRITE_WIFI_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+22. WRITE_SERVERS
+Args:
+- mqtt_server
+- ntp_server
+
+Example:
+WRITE_SERVERS,11.11.1.1,11.11.1.2
+
+Response:
+OK:WRITE_SERVERS,11.11.1.1,11.11.1.2,1
+
+If service mode is disabled:
+ERR:WRITE_SERVERS_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+23. WRITE_MQTT_CREDENTIALS
+Args:
+- mqtt_user
+- mqtt_password
+
+Example:
+WRITE_MQTT_CREDENTIALS,user,pass
+
+Response:
+OK:WRITE_MQTT_CREDENTIALS,user,p**s,1
+
+If service mode is disabled:
+ERR:WRITE_MQTT_CREDENTIALS_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+24. LCD_CLEAR
+Args: none
+Example:
+LCD_CLEAR
+
+If service mode is disabled:
+ERR:LCD_CLEAR_SERVICE_MODE_DISABLED
+(or command rejected depending on implementation)
+
+--------------------------------------------------
+
+25. LCD_BACKLIGHT
+Args:
+- state (0 or 1)
+
+Example:
+LCD_BACKLIGHT,1
+
+If service mode is disabled:
+ERR:LCD_BACKLIGHT_SERVICE_MODE_DISABLED
+(or command rejected depending on implementation)
+
+--------------------------------------------------
+
+26. WRITE_FLASH
+Args:
+- address
+- byte1
+- byte2
+- ...
+- byteN
+
+Status:
+reserved / service only / depending on current implementation
+
+--------------------------------------------------
+
+27. READ_FLASH
+Args:
+- address
+- length
+
+Status:
+reserved / service only / depending on current implementation

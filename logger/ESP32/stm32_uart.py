@@ -1,8 +1,8 @@
 import time
 from machine import UART
-from config import Config
+from config import get_config
 
-cfg = Config()
+cfg = get_config()
 
 
 class STM32UART:
@@ -39,7 +39,7 @@ class STM32UART:
         )
         return bytes(frame)
 
-    def read_exact(self, n: int, timeout_ms: int = 500) -> bytes | None:
+    def read_exact(self, n: int, timeout_ms: int = 500):
         buf = bytearray()
         t0 = time.ticks_ms()
         while len(buf) < n and time.ticks_diff(time.ticks_ms(), t0) < timeout_ms:
@@ -59,7 +59,7 @@ class STM32UART:
                 break
             time.sleep_ms(1)
 
-    def uart_loop_application(self, frame: bytes) -> bytes | None:
+    def uart_loop_application(self, frame: bytes):
         self._flush_rx()
         self.uart.write(frame)
         t0 = time.ticks_ms()
@@ -152,7 +152,7 @@ class STM32UART:
         p = self._send_cmd(0x01, 0x01, check_status=False)
         if not p:
             return ["", ""]
-        return [f"{p[0]}.{p[1]}.{p[2]}", f"{p[3]}.{p[4]}"]
+        return ["{}.{}.{}".format(p[0], p[1], p[2]), "{}.{}".format(p[3], p[4])]
 
     def req_build_date(self):
         p = self._send_cmd(0x01, 0x02, check_status=False)
@@ -188,6 +188,14 @@ class STM32UART:
             self.u32_from_be(p, 8) / 25600.0,
         ]
 
+    def req_lcd_clear(self):
+        p = self._send_cmd(0x03, 0x02)
+        return p[0] if p else 0
+
+    def req_lcd_set_backlight(self, on: int):
+        p = self._send_cmd(0x03, 0x03, bytes([on & 0xFF]))
+        return p[0] if p else 0
+
     def req_get_input_states(self, channel: int):
         p = self._send_cmd(0x02, channel)
         return p[0] if p else 0
@@ -206,11 +214,13 @@ class STM32UART:
         p = self._send_cmd(0x05, channel, bytes([duty & 0xFF]))
         return p[0] if p else 0
 
-    def req_set_rgb(self, r: int, g: int, b: int):
-        p = self._send_cmd(0x05, 0x05, bytes([r & 0xFF, g & 0xFF, b & 0xFF]))
+    def req_set_rgb(self, r: int, g: int, b: int, brightness: int):
+        p = self._send_cmd(
+            0x05, 0x05, bytes([r & 0xFF, g & 0xFF, b & 0xFF, brightness & 0xFF])
+        )
         if not p:
-            return [0, 0, 0]
-        return [p[0], p[1], p[2]]
+            return [0, 0, 0, 0]
+        return [p[0], p[1], p[2], p[3]]
 
     def req_set_buzzer(self, freq: int, volume: int):
         pl = bytes([(freq >> 8) & 0xFF, freq & 0xFF, volume & 0xFF])
@@ -278,3 +288,141 @@ class STM32UART:
         return "20{:02d}-{:02d}-{:02d} {:02d}:{:02d}:{:02d}".format(
             p[0], p[1], p[2], p[4], p[5], p[6]
         )
+
+    def req_fram_read(self, addr: int, data_len: int):
+        if addr < 0 or addr > 0x07FF:
+            return None
+        if data_len <= 0 or data_len > 16:
+            return None
+
+        pl = bytes([(addr >> 8) & 0xFF, addr & 0xFF, data_len & 0xFF])
+        p = self._send_cmd(0x08, 0x01, pl)
+        return p[:data_len] if p else None
+
+    def req_fram_write(self, addr: int, data: bytes):
+        if addr < 0 or addr > 0x07FF:
+            return 0
+        if not data or len(data) > 16:
+            return 0
+
+        pl = bytes([(addr >> 8) & 0xFF, addr & 0xFF, len(data) & 0xFF]) + data
+        p = self._send_cmd(0x08, 0x00, pl)
+        return 1 if p is not None else 0
+
+    def req_fram_read_flags(self):
+        p = self._send_cmd(0x08, 0x02)
+        flags = {
+            "FRAM_FLAG_EXT_RTC_PRESENT": 1 if p and (p[0] & (1 << 0)) else 0,
+            "FRAM_FLAG_FLASH_PRESENT": 1 if p and (p[0] & (1 << 1)) else 0,
+            "FRAM_FLAG_DISPLAY_PRESENT": 1 if p and (p[0] & (1 << 2)) else 0,
+            "FRAM_FLAG_SHT40_PRESENT": 1 if p and (p[0] & (1 << 3)) else 0,
+            "FRAM_FLAG_BME280_PRESENT": 1 if p and (p[0] & (1 << 4)) else 0,
+            "FRAM_FLAG_INA226_PRESENT": 1 if p and (p[0] & (1 << 5)) else 0,
+            "FRAM_FLAG_ADC_PRESENT": 1 if p and (p[0] & (1 << 6)) else 0,
+        }
+        return flags
+
+    def req_fram_write_flags(self, flag_byte: int):
+        pl = bytes([flag_byte & 0xFF])
+        p = self._send_cmd(0x08, 0x03, pl)
+        return 1 if p is not None else 0
+
+    def fram_read_string(self, addr: int, max_len: int):
+        result = bytearray()
+        offset = 0
+
+        while offset < max_len:
+            chunk_len = min(16, max_len - offset)
+            chunk = self.req_fram_read(addr + offset, chunk_len)
+            if chunk is None:
+                raise Exception(
+                    "FRAM read failed at addr={} len={}".format(
+                        addr + offset, chunk_len
+                    )
+                )
+
+            for b in chunk:
+                if b == 0:
+                    return result.decode("utf-8", "ignore")
+                result.append(b)
+
+            offset += chunk_len
+
+        return result.decode("utf-8", "ignore")
+
+    def fram_write_string(self, addr: int, value: str, max_len: int):
+        raw = value.encode("utf-8")
+        if len(raw) >= max_len:
+            raw = raw[: max_len - 1]
+
+        padded = raw + b"\x00" + bytes(max_len - len(raw) - 1)
+
+        offset = 0
+        while offset < max_len:
+            chunk = padded[offset : offset + 16]
+            ok = self.req_fram_write(addr + offset, chunk)
+            if not ok:
+                return 0
+            offset += len(chunk)
+
+        return 1
+
+    def req_flash_read(self, addr: int, data_len: int):
+        if addr < 0 or addr > 0x01FFFFFF:
+            return None
+        if data_len <= 0 or data_len > 16:
+            return None
+
+        pl = bytes(
+            [
+                (addr >> 24) & 0xFF,
+                (addr >> 16) & 0xFF,
+                (addr >> 8) & 0xFF,
+                addr & 0xFF,
+                data_len & 0xFF,
+            ]
+        )
+        p = self._send_cmd(0x08, 0x11, pl)
+        return p[:data_len] if p else None
+
+    def req_flash_write(self, addr: int, data: bytes):
+        if addr < 0 or addr > 0x01FFFFFF:
+            return 0
+        if not data or len(data) > 15:
+            return 0
+
+        pl = (
+            bytes(
+                [
+                    (addr >> 24) & 0xFF,
+                    (addr >> 16) & 0xFF,
+                    (addr >> 8) & 0xFF,
+                    addr & 0xFF,
+                    len(data) & 0xFF,
+                ]
+            )
+            + data
+        )
+        p = self._send_cmd(0x08, 0x10, pl)
+        return 1 if p is not None else 0
+
+    def write_fram_config_field(self, field_name, value):
+        if field_name == "logger_id":
+            return self.fram_write_string(cfg.get_fram_addr_logger_id(), str(value), 32)
+        elif field_name == "sensor_id":
+            return self.fram_write_string(cfg.get_fram_addr_sensor_id(), str(value), 32)
+        return 0
+
+    def read_fram_config(self):
+        data = {}
+        data["logger_id"] = (
+            self.fram_read_string(cfg.get_fram_addr_logger_id(), 32) or ""
+        )
+        data["sensor_id"] = (
+            self.fram_read_string(cfg.get_fram_addr_sensor_id(), 32) or ""
+        )
+        return data
+
+    def req_reset(self):
+        p = self._send_cmd(0x99, 0x99)
+        return p[0] if p else 0

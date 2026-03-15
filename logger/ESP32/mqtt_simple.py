@@ -1,6 +1,5 @@
 import usocket as socket
 import ustruct as struct
-from ubinascii import hexlify
 
 
 class MQTTException(Exception):
@@ -17,7 +16,7 @@ class MQTTClient:
         password=None,
         keepalive=0,
         ssl=False,
-        ssl_params={},
+        ssl_params=None,
     ):
         if port == 0:
             port = 8883 if ssl else 1883
@@ -26,7 +25,7 @@ class MQTTClient:
         self.server = server
         self.port = port
         self.ssl = ssl
-        self.ssl_params = ssl_params
+        self.ssl_params = ssl_params if ssl_params is not None else {}
         self.pid = 0
         self.cb = None
         self.user = user
@@ -66,40 +65,54 @@ class MQTTClient:
         self.sock = socket.socket()
         addr = socket.getaddrinfo(self.server, self.port)[0][-1]
         self.sock.connect(addr)
+
         if self.ssl:
             import ussl
 
             self.sock = ussl.wrap_socket(self.sock, **self.ssl_params)
+
         premsg = bytearray(b"\x10\0\0\0\0\0")
         msg = bytearray(b"\x04MQTT\x04\x02\0\0")
         sz = 10 + 2 + len(self.client_id)
         msg[6] = clean_session << 1
+
+        pswd = self.pswd if self.pswd is not None else b""
+
         if self.user is not None:
-            sz += 2 + len(self.user) + 2 + len(self.pswd)
+            sz += 2 + len(self.user) + 2 + len(pswd)
             msg[6] |= 0xC0
+
         if self.keepalive:
             assert self.keepalive < 65536
-            msg[7] |= self.keepalive >> 8
-            msg[8] |= self.keepalive & 0x00FF
+            msg[7] = (self.keepalive >> 8) & 0xFF
+            msg[8] = self.keepalive & 0xFF
+
         if self.lw_topic:
             sz += 2 + len(self.lw_topic) + 2 + len(self.lw_msg)
             msg[6] |= 0x4 | (self.lw_qos & 0x1) << 3 | (self.lw_qos & 0x2) << 3
             msg[6] |= self.lw_retain << 5
+
         i = 1
         while sz > 0x7F:
             premsg[i] = (sz & 0x7F) | 0x80
             sz >>= 7
             i += 1
         premsg[i] = sz
+
+        print("MQTT connect: sz={}, keepalive={}".format(sz, self.keepalive))
+
         self.sock.write(premsg, i + 2)
         self.sock.write(msg)
         self._send_str(self.client_id)
+
         if self.lw_topic:
             self._send_str(self.lw_topic)
             self._send_str(self.lw_msg)
+
         if self.user is not None:
             self._send_str(self.user)
-            self._send_str(self.pswd)
+            self._send_str(pswd)
+
         resp = self.sock.read(4)
         assert resp[0] == 0x20 and resp[1] == 0x02
         if resp[3] != 0:

@@ -5,8 +5,8 @@ export async function mqttDevices(req, res) {
 	try {
 		const deviceId = req.params.deviceId
 
-		const command = req.body.command || 'UNKNOWN'
-		const parameters = req.body.parameters || {}
+		const command = req.body.cmd || 'UNKNOWN'
+		const parameters = req.body.params || {}
 
 		const topic = `devices/${deviceId}/cmd`
 		const payload = JSON.stringify({

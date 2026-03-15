@@ -463,12 +463,21 @@ void timer4_pwm_ch4_set_duty(uint8_t duty_0_255)
 
 
 // TIMER3 CH1-CH3 LED RGB
-void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b)
+void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 {
     uint32_t arr = TIM3->ARR;
-    uint32_t rd = ((uint32_t)r * arr) / 255U;
-    uint32_t gd = ((uint32_t)g * arr) / 255U;
-    uint32_t bd = ((uint32_t)b * arr) / 255U;
+
+    if (brightness > 100U) {
+        brightness = 100U;
+    }
+
+    uint32_t r_scaled = ((uint32_t)r * brightness) / 100U;
+    uint32_t g_scaled = ((uint32_t)g * brightness) / 100U;
+    uint32_t b_scaled = ((uint32_t)b * brightness) / 100U;
+
+    uint32_t rd = (r_scaled * arr) / 255U;
+    uint32_t gd = (g_scaled * arr) / 255U;
+    uint32_t bd = (b_scaled * arr) / 255U;
 
     // CH3 - RED, CH2 - GREEN, CH1 - BLUE
     timer3_pwm_ch3_set_duty((int32_t)rd);
@@ -476,26 +485,32 @@ void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b)
     timer3_pwm_ch1_set_duty((int32_t)bd);
 }
 
-//TIMER3 CH4 BUZZER
-void timer3_pwm_set_buzzer(int32_t duty){
-    timer3_pwm_ch4_set_duty(duty);
-}
-
-void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume){
-    if (freq == 0) {
+void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
+{
+    if (freq == 0U || volume == 0U) {
         timer3_pwm_ch4_set_duty(0);
         return;
     }
-    uint32_t timer_clock = 84000000;
-    uint32_t prescaler = 1;
-    uint32_t period;
 
-    period = timer_clock / freq;
-    while (period > 65535 && prescaler < 65536) {
+    if (volume > 100U) {
+        volume = 100U;
+    }
+
+    uint32_t timer_clock = 84000000U;
+    uint32_t prescaler = 1U;
+    uint32_t period = timer_clock / freq;
+
+    while (period > 65535U && prescaler < 65536U) {
         prescaler++;
         period = timer_clock / (prescaler * freq);
     }
-    
+
+    if (period < 2U) {
+        period = 2U;
+    }
+
     timer3_pwm_ch4_init(prescaler, period);
-    timer3_pwm_ch4_set_duty((period * volume) / 100);
+
+    uint32_t duty = ((period * volume) / 100U) / 2U;
+    timer3_pwm_ch4_set_duty((int32_t)duty);
 }

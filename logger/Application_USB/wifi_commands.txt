@@ -1,0 +1,670 @@
+MQTT COMMANDS - ESP32 / STM32 CONFIGURATOR
+
+Topic subscribe:
+devices/<logger_id>/cmd
+
+Topic publish:
+devices/<logger_id>/status
+
+Format:
+{
+  "cmd": "COMMAND_NAME",
+  "params": {}
+}
+
+==================================================
+PUBLIC COMMANDS
+==================================================
+
+1. PING
+Request:
+{
+  "cmd": "PING",
+  "params": {}
+}
+
+Response result:
+"ALIVE"
+
+--------------------------------------------------
+
+2. SYNC_TIME
+Request:
+{
+  "cmd": "SYNC_TIME",
+  "params": {}
+}
+
+Response result:
+"TIME_SYNCED"
+
+Response info:
+- rtc_time
+- sync_time
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+3. READ_RTC
+Request:
+{
+  "cmd": "READ_RTC",
+  "params": {}
+}
+
+Response result:
+"RTC_READ"
+
+Response info:
+- rtc_time
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+4. READ_INPUTS
+Request:
+{
+  "cmd": "READ_INPUTS",
+  "params": {}
+}
+
+Response result:
+"INPUTS_READ"
+
+Response info:
+- BTN1
+- BTN2
+- ESP32_STATUS
+
+--------------------------------------------------
+
+5. SET_OUTPUT
+Request:
+{
+  "cmd": "SET_OUTPUT",
+  "params": {
+    "channel": "LED1",
+    "value": 1
+  }
+}
+
+Available channels:
+- LED1
+- LED2
+- PB12
+- PC0
+- PC1
+- PC2
+- PC3
+- ESP32_STATUS
+
+Response result:
+"OUTPUT_SET"
+
+Response info:
+- channel
+- value
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+6. SET_PWM
+Request:
+{
+  "cmd": "SET_PWM",
+  "params": {
+    "channel": "TIM1_CH1",
+    "duty_cycle": 128
+  }
+}
+
+Available channels:
+- TIM1_CH1
+- TIM2_CH3
+- TIM4_CH3
+- TIM4_CH4
+
+Response result:
+"PWM_SET"
+
+Response info:
+- channel
+- duty_cycle
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+7. RGB
+Request:
+{
+  "cmd": "RGB",
+  "params": {
+    "r": 255,
+    "g": 0,
+    "b": 0,
+    "brightness": 100
+  }
+}
+
+Response result:
+"RGB_SET"
+
+Response info:
+- r
+- g
+- b
+- brightness
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+8. BUZZER
+Request:
+{
+  "cmd": "BUZZER",
+  "params": {
+    "freq": 1000,
+    "volume": 50
+  }
+}
+
+Response result:
+"BUZZER_SET"
+
+Response info:
+- freq
+- volume
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+9. READ_INA
+Request:
+{
+  "cmd": "READ_INA",
+  "params": {}
+}
+
+Response result:
+"INA_READ"
+
+Response info:
+- bus_voltage
+- shunt_voltage
+- current
+- power
+- id
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+10. READ_SHT40
+Request:
+{
+  "cmd": "READ_SHT40",
+  "params": {}
+}
+
+Response result:
+"SHT40_READ"
+
+Response info:
+- temperature
+- humidity
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+11. READ_BME280
+Request:
+{
+  "cmd": "READ_BME280",
+  "params": {}
+}
+
+Response result:
+"BME280_READ"
+
+Response info:
+- temperature
+- humidity
+- pressure
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+12. READ_FLAGS
+Request:
+{
+  "cmd": "READ_FLAGS",
+  "params": {}
+}
+
+Response result:
+"FLAGS_READ"
+
+Response info:
+- flags:
+  - FRAM_FLAG_EXT_RTC_PRESENT
+  - FRAM_FLAG_FLASH_PRESENT
+  - FRAM_FLAG_DISPLAY_PRESENT
+  - FRAM_FLAG_SHT40_PRESENT
+  - FRAM_FLAG_BME280_PRESENT
+  - FRAM_FLAG_INA226_PRESENT
+  - FRAM_FLAG_ADC_PRESENT
+  - WIFI_ENABLED
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+13. READ_CONFIG
+Request:
+{
+  "cmd": "READ_CONFIG",
+  "params": {}
+}
+
+Response result:
+"CONFIG_READ"
+
+Response info:
+- logger_id
+- sensor_id
+- wifi_ssid
+- wifi_password (masked)
+- mqtt_server
+- ntp_server
+- mqtt_user (masked)
+- mqtt_password (masked)
+
+==================================================
+SERVICE MODE COMMANDS
+==================================================
+
+14. SERVICE_MODE_ENABLE
+Request:
+{
+  "cmd": "SERVICE_MODE_ENABLE",
+  "params": {
+    "password": "ABCDEF1234"
+  }
+}
+
+Success result:
+"SERVICE_MODE_ENABLED"
+
+Success info:
+- duration_sec
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Failure result:
+"SERVICE_MODE_ENABLE_FAILED"
+
+Failure info:
+- reason = "Invalid password"
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+15. SERVICE_MODE_DISABLE
+Request:
+{
+  "cmd": "SERVICE_MODE_DISABLE",
+  "params": {}
+}
+
+Response result:
+"SERVICE_MODE_DISABLED"
+
+Response info:
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+--------------------------------------------------
+
+16. RESET
+Request:
+{
+  "cmd": "RESET",
+  "params": {}
+}
+
+Response result:
+"RESET"
+
+Only in service mode.
+
+--------------------------------------------------
+
+17. LCD_CLEAR
+Request:
+{
+  "cmd": "LCD_CLEAR",
+  "params": {}
+}
+
+Response result:
+"LCD_CLEARED"
+
+Only in service mode.
+
+--------------------------------------------------
+
+18. LCD_BACKLIGHT
+Request:
+{
+  "cmd": "LCD_BACKLIGHT",
+  "params": {
+    "state": 1
+  }
+}
+
+Response result:
+"LCD_BACKLIGHT_SET"
+
+Response info:
+- state
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+--------------------------------------------------
+
+19. WRITE_FRAM
+Request:
+{
+  "cmd": "WRITE_FRAM",
+  "params": {
+    "address": 512,
+    "data": [1, 2, 3, 4]
+  }
+}
+
+Response result:
+"FRAM_WRITE"
+
+Response info:
+- address
+- data
+- ok
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+--------------------------------------------------
+
+20. READ_FRAM
+Request:
+{
+  "cmd": "READ_FRAM",
+  "params": {
+    "address": 512,
+    "length": 4
+  }
+}
+
+Response result:
+"FRAM_READ"
+
+Response info:
+- address
+- data
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+--------------------------------------------------
+
+21. WRITE_FLAGS
+Request:
+{
+  "cmd": "WRITE_FLAGS",
+  "params": {
+    "flags": "0xDF",
+    "wifi_enabled": 1
+  }
+}
+
+Response result:
+"FLAGS_WRITE"
+
+Response info:
+- flags
+- ok
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+--------------------------------------------------
+
+22. WRITE_IDS
+Request:
+{
+  "cmd": "WRITE_IDS",
+  "params": {
+    "logger_id": "1",
+    "sensor_id": "2"
+  }
+}
+
+Response result:
+"IDS_CONFIG_WRITE"
+
+Response info:
+- ok
+- logger_id
+- sensor_id
+
+Only in service mode.
+
+--------------------------------------------------
+
+23. WRITE_WIFI
+Request:
+{
+  "cmd": "WRITE_WIFI",
+  "params": {
+    "wifi_ssid": "xx",
+    "wifi_password": "yyy"
+  }
+}
+
+Response result:
+"WIFI_CONFIG_WRITE"
+
+Response info:
+- ok
+- wifi_ssid
+- wifi_password (masked)
+
+Only in service mode.
+
+--------------------------------------------------
+
+24. WRITE_SERVERS
+Request:
+{
+  "cmd": "WRITE_SERVERS",
+  "params": {
+    "mqtt_server": "11.11.1.1",
+    "ntp_server": "11.11.1.2"
+  }
+}
+
+Response result:
+"SERVERS_CONFIG_WRITE"
+
+Response info:
+- ok
+- mqtt_server
+- ntp_server
+
+Only in service mode.
+
+--------------------------------------------------
+
+25. WRITE_MQTT_CREDENTIALS
+Request:
+{
+  "cmd": "WRITE_MQTT_CREDENTIALS",
+  "params": {
+    "mqtt_user": "user",
+    "mqtt_password": "pass"
+  }
+}
+
+Response result:
+"MQTT_CREDENTIALS_CONFIG_WRITE"
+
+Response info:
+- ok
+- mqtt_user
+- mqtt_password (masked)
+
+Only in service mode.
+
+--------------------------------------------------
+
+26. WRITE_FLASH
+Request:
+{
+  "cmd": "WRITE_FLASH",
+  "params": {
+    "address": 4096,
+    "data": [10, 20, 30, 40]
+  }
+}
+
+Response result:
+"FLASH_WRITE"
+
+Response info:
+- address
+- data
+- ok
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+--------------------------------------------------
+
+27. READ_FLASH
+Request:
+{
+  "cmd": "READ_FLASH",
+  "params": {
+    "address": 4096,
+    "length": 4
+  }
+}
+
+Response result:
+"FLASH_READ"
+
+Response info:
+- address
+- data
+- communication_sw
+- communication_build
+- logger_id
+- sensor_id
+- ip_address
+
+Only in service mode.
+
+==================================================
+GENERAL MQTT RESPONSE FORMAT
+==================================================
+
+All responses are published as JSON in the form:
+
+{
+  "result": "RESULT_NAME",
+  "info": {...},
+  "type": "STATUS",
+  "timestamp": yyy90
+}
+
+Error responses are sent as:
+
+{
+  "result": "ERROR",
+  "info": {
+    "timestamp": yyy90,
+    "source": "CMD",
+    "msg": "..."
+  },
+  "type": "ERROR",
+  "timestamp": yyy90
+}

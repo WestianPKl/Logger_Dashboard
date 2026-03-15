@@ -6,6 +6,7 @@ import DataDefinitions from './api/model/data/dataDefinitions.model.js'
 import DataLogs from './api/model/data/dataLogs.model.js'
 import EquStats from './api/model/equipment/equStats.model.js'
 import EquLogs from './api/model/equipment/equLogs.model.js'
+import ErrorLog from './api/model/errorLog.model.js'
 import { getIo } from './middleware/socket.js'
 
 const MQTT_URL =
@@ -28,6 +29,50 @@ export const mqttClient = mqtt.connect(MQTT_URL, {
 	keepalive: 30,
 	clean: true,
 })
+
+async function handleError(obj, t) {
+	try {
+		if (
+			obj.result === 'ERRORS_FLUSH' &&
+			obj.info &&
+			Array.isArray(obj.info.items)
+		) {
+			for (const errorItem of obj.info.items) {
+				const equipmentId =
+					errorItem.logger_id || obj.info?.logger_id || null
+				await ErrorLog.create(
+					{
+						message: errorItem.msg || 'Unknown error',
+						details: JSON.stringify(errorItem),
+						type: 'Equipment',
+						severity: errorItem.severity || 'Error',
+						equipmentId: equipmentId,
+					},
+					{ transaction: t }
+				)
+			}
+		} else {
+			const equipmentId = obj.info?.logger_id || null
+			await ErrorLog.create(
+				{
+					message:
+						obj.info?.msg ||
+						obj.info?.message ||
+						JSON.stringify(obj) ||
+						'Unknown error',
+					details: JSON.stringify(obj.info || obj),
+					type: 'Equipment',
+					severity: obj.info?.severity || 'Error',
+					equipmentId: equipmentId,
+				},
+				{ transaction: t }
+			)
+		}
+	} catch (err) {
+		console.error('[MQTT] Error saving to ErrorLog:', err)
+		throw err
+	}
+}
 
 async function updateStatus(obj, t) {
 	if (obj.info.logger_id && obj.info.sensor_id) {
@@ -79,6 +124,7 @@ mqttClient.on('message', async (topic, payload) => {
 	const t = await sequelize.transaction()
 	try {
 		const obj = JSON.parse(s)
+		console.log(obj)
 		if (obj.info && obj.info.rtc) {
 			if (new Date(obj.info.rtc).getFullYear() < 2024) {
 				obj.info.rtc = new Date().toLocaleString('sv-SE', {
@@ -89,6 +135,10 @@ mqttClient.on('message', async (topic, payload) => {
 					timeZone: 'Europe/Warsaw',
 				})
 			}
+		} else {
+			obj.info.rtc = new Date().toLocaleString('sv-SE', {
+				timeZone: 'Europe/Warsaw',
+			})
 		}
 
 		if (obj.type == 'STATUS') {
@@ -101,7 +151,14 @@ mqttClient.on('message', async (topic, payload) => {
 		}
 
 		if (obj.type == 'ERROR') {
-			console.log(obj)
+			await handleError(obj, t)
+				.then(() => {
+					t.commit()
+				})
+				.catch((err) => {
+					console.error('[MQTT] Error handling ERROR message:', err)
+					t.rollback()
+				})
 		}
 
 		if (obj.type == 'DATA') {
@@ -123,7 +180,7 @@ mqttClient.on('message', async (topic, payload) => {
 					return
 				}
 
-				if (obj.info.sht40) {
+				if (obj.info.sht40 && obj.info.sht40_error !== 1) {
 					Object.entries(obj.info.sht40).forEach(([type, value]) => {
 						dataLog.push({
 							time: obj.info.rtc,
@@ -135,7 +192,7 @@ mqttClient.on('message', async (topic, payload) => {
 					})
 				}
 
-				if (obj.info.bme280) {
+				if (obj.info.bme280 && obj.info.bme280_error !== 1) {
 					Object.entries(obj.info.bme280).forEach(([type, value]) => {
 						if (type === 'pressure') {
 							type = 'atmPressure'

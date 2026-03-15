@@ -12,7 +12,8 @@ static int dma_stream_disable_timeout(DMA_Stream_TypeDef *s)
 
 static void dma_stream_disable(DMA_Stream_TypeDef *s)
 {
-    (void)dma_stream_disable_timeout(s);
+    int rc = dma_stream_disable_timeout(s);
+    (void)rc;
 }
 
 void dma1_init(void)
@@ -29,7 +30,6 @@ void dma2_init(void)
 
 void dma2_adc1_config(uint8_t circular, uint16_t *dst, uint16_t len)
 {
-    // DMA2 Stream0 Channel0
     dma_stream_disable(DMA2_Stream0);
 
     DMA2_Stream0->PAR  = (uint32_t)&ADC1->DR;
@@ -55,11 +55,7 @@ void dma2_adc1_config(uint8_t circular, uint16_t *dst, uint16_t len)
 
 void dma1_uart2_rx_config(uint8_t *dst, uint16_t len)
 {
-    // DMA1 Stream5 Channel4: USART2_RX
     dma_stream_disable(DMA1_Stream5);
-
-    // DMA1->HIFCR = DMA_HIFCR_CTCIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTEIF5 |
-    //              DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CFEIF5;
 
     DMA1_Stream5->PAR  = (uint32_t)&USART2->DR;
     DMA1_Stream5->M0AR = (uint32_t)dst;
@@ -78,11 +74,7 @@ void dma1_uart2_rx_config(uint8_t *dst, uint16_t len)
 
 void dma1_uart2_tx_start(uint8_t *mem_addr, uint16_t len)
 {
-    // DMA1 Stream6 Channel4: USART2_TX
     dma_stream_disable(DMA1_Stream6);
-
-    // DMA1->HIFCR = DMA_HIFCR_CTCIF6 | DMA_HIFCR_CHTIF6 | DMA_HIFCR_CTEIF6 |
-    //              DMA_HIFCR_CDMEIF6 | DMA_HIFCR_CFEIF6;
 
     DMA1_Stream6->PAR  = (uint32_t)&USART2->DR;
     DMA1_Stream6->M0AR = (uint32_t)mem_addr;
@@ -103,11 +95,7 @@ void dma1_uart2_tx_start(uint8_t *mem_addr, uint16_t len)
 
 void dma2_uart1_rx_config(uint8_t *dst, uint16_t len)
 {
-    // DMA2 Stream5 Channel4: USART1_RX
     dma_stream_disable(DMA2_Stream5);
-
-    // DMA2->HIFCR = DMA_HIFCR_CTCIF5 | DMA_HIFCR_CHTIF5 | DMA_HIFCR_CTEIF5 |
-    //                 DMA_HIFCR_CDMEIF5 | DMA_HIFCR_CFEIF5;
 
     DMA2_Stream5->PAR  = (uint32_t)&USART1->DR;
     DMA2_Stream5->M0AR = (uint32_t)dst;
@@ -126,11 +114,7 @@ void dma2_uart1_rx_config(uint8_t *dst, uint16_t len)
 
 void dma2_uart1_tx_start(uint8_t *mem_addr, uint16_t len)
 {
-    // DMA2 Stream7 Channel4: USART1_TX
     dma_stream_disable(DMA2_Stream7);
-
-    // DMA2->HIFCR = DMA_HIFCR_CTCIF7 | DMA_HIFCR_CHTIF7 | DMA_HIFCR_CTEIF7 |
-    //                 DMA_HIFCR_CDMEIF7 | DMA_HIFCR_CFEIF7;
 
     DMA2_Stream7->PAR  = (uint32_t)&USART1->DR;
     DMA2_Stream7->M0AR = (uint32_t)mem_addr;

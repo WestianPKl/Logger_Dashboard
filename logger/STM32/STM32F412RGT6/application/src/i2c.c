@@ -62,6 +62,102 @@ static int wait_flag_clr(volatile uint32_t *reg, uint32_t mask)
     return 1;
 }
 
+static int i2c1_start_addr(uint8_t addr7, uint8_t read)
+{
+    I2C1->CR1 |= I2C_CR1_START;
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_SB) < 0) return -1;
+
+    (void)I2C1->SR1;
+    I2C1->DR = (uint8_t)((addr7 << 1) | (read ? 1U : 0U));
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_ADDR) < 0) return -1;
+    return 1;
+}
+
+static int i2c1_write_bytes(const uint8_t *data, uint16_t len)
+{
+    if (!data || !len) return -1;
+
+    (void)I2C1->SR1;
+    (void)I2C1->SR2;
+
+    for (uint16_t i = 0; i < len; i++) {
+        if (wait_flag_set(&I2C1->SR1, I2C_SR1_TXE) < 0) return -1;
+        I2C1->DR = data[i];
+    }
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) return -1;
+    return 1;
+}
+
+static int i2c1_read_bytes(uint8_t *data, uint16_t len)
+{
+    if (!data || !len) return -1;
+
+    if (len == 1U) {
+        I2C1->CR1 &= ~I2C_CR1_ACK;
+
+        __disable_irq();
+        (void)I2C1->SR1;
+        (void)I2C1->SR2;
+        I2C1->CR1 |= I2C_CR1_STOP;
+        __enable_irq();
+
+        if (wait_flag_set(&I2C1->SR1, I2C_SR1_RXNE) < 0) return -1;
+        data[0] = (uint8_t)I2C1->DR;
+        I2C1->CR1 |= I2C_CR1_ACK;
+        return 1;
+    }
+
+    if (len == 2U) {
+        I2C1->CR1 |= I2C_CR1_POS;
+        I2C1->CR1 &= ~I2C_CR1_ACK;
+
+        __disable_irq();
+        (void)I2C1->SR1;
+        (void)I2C1->SR2;
+        __enable_irq();
+
+        if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) return -1;
+
+        __disable_irq();
+        I2C1->CR1 |= I2C_CR1_STOP;
+        data[0] = (uint8_t)I2C1->DR;
+        __enable_irq();
+
+        data[1] = (uint8_t)I2C1->DR;
+
+        I2C1->CR1 &= ~I2C_CR1_POS;
+        I2C1->CR1 |= I2C_CR1_ACK;
+        return 1;
+    }
+
+    I2C1->CR1 |= I2C_CR1_ACK;
+    (void)I2C1->SR1;
+    (void)I2C1->SR2;
+
+    for (uint16_t i = 0; i < (len - 3U); i++) {
+        if (wait_flag_set(&I2C1->SR1, I2C_SR1_RXNE) < 0) return -1;
+        data[i] = (uint8_t)I2C1->DR;
+    }
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) return -1;
+
+    I2C1->CR1 &= ~I2C_CR1_ACK;
+
+    __disable_irq();
+    data[len - 3U] = (uint8_t)I2C1->DR;
+    I2C1->CR1 |= I2C_CR1_STOP;
+    data[len - 2U] = (uint8_t)I2C1->DR;
+    __enable_irq();
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_RXNE) < 0) return -1;
+    data[len - 1U] = (uint8_t)I2C1->DR;
+
+    I2C1->CR1 |= I2C_CR1_ACK;
+    return 1;
+}
+
 void i2c1_init(void)
 {
     RCC->APB1ENR |= RCC_APB1ENR_I2C1EN;
@@ -77,7 +173,6 @@ void i2c1_init(void)
     GPIOB->OSPEEDR |= ((3U << (I2C1_SCL_PIN * 2U)) | (3U << (I2C1_SDA_PIN * 2U)));
 
     GPIOB->PUPDR &= ~((3U << (I2C1_SCL_PIN * 2U)) | (3U << (I2C1_SDA_PIN * 2U)));
-    GPIOB->PUPDR |=  ((1U << (I2C1_SCL_PIN * 2U)) | (1U << (I2C1_SDA_PIN * 2U)));
 
     GPIOB->AFR[0] &= ~((0xFU << (I2C1_SCL_PIN * 4U)) | (0xFU << (I2C1_SDA_PIN * 4U)));
     GPIOB->AFR[0] |=  ((4U << (I2C1_SCL_PIN * 4U)) | (4U << (I2C1_SDA_PIN * 4U)));
@@ -92,30 +187,16 @@ void i2c1_init(void)
     I2C1->TRISE = SD_MODE_MAX_RISE_TIME;
 
     I2C1->CR1 |= I2C_CR1_PE;
+    I2C1->CR1 |= I2C_CR1_ACK;
 }
+
 
 int i2c1_write_raw(uint8_t dev_addr, const uint8_t *data, uint8_t len)
 {
     if (!data || len == 0) return -1;
-
     if (wait_flag_clr(&I2C1->SR2, I2C_SR2_BUSY) < 0) I2C_FAIL();
-
-    I2C1->CR1 |= I2C_CR1_START;
-    if (wait_flag_set(&I2C1->SR1, I2C_SR1_SB) < 0) I2C_FAIL();
-
-    (void)I2C1->SR1;
-    I2C1->DR = (dev_addr << 1) | 0;
-    if (wait_flag_set(&I2C1->SR1, I2C_SR1_ADDR) < 0) I2C_FAIL();
-
-    (void)I2C1->SR1;
-    (void)I2C1->SR2;
-
-    for (uint8_t i = 0; i < len; i++) {
-        if (wait_flag_set(&I2C1->SR1, I2C_SR1_TXE) < 0) I2C_FAIL();
-        I2C1->DR = data[i];
-    }
-
-    if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) I2C_FAIL();
+    if (i2c1_start_addr(dev_addr, 0) < 0) I2C_FAIL();
+    if (i2c1_write_bytes(data, len) < 0) I2C_FAIL();
     I2C1->CR1 |= I2C_CR1_STOP;
     return 1;
 }
@@ -123,42 +204,57 @@ int i2c1_write_raw(uint8_t dev_addr, const uint8_t *data, uint8_t len)
 int i2c1_read_raw(uint8_t dev_addr, uint8_t *data, uint8_t len)
 {
     if (!data || len == 0) return -1;
+    if (wait_flag_clr(&I2C1->SR2, I2C_SR2_BUSY) < 0) I2C_FAIL();
+    if (i2c1_start_addr(dev_addr, 1) < 0) I2C_FAIL();
+    if (i2c1_read_bytes(data, len) < 0) I2C_FAIL();
+    return 1;
+}
 
+int i2c1_reg_write(uint8_t addr7, uint8_t reg, const uint8_t *data, uint16_t len)
+{
     if (wait_flag_clr(&I2C1->SR2, I2C_SR2_BUSY) < 0) I2C_FAIL();
 
-    I2C1->CR1 |= I2C_CR1_START;
-    if (wait_flag_set(&I2C1->SR1, I2C_SR1_SB) < 0) I2C_FAIL();
+    if (i2c1_start_addr(addr7, 0) < 0) I2C_FAIL();
 
-    (void)I2C1->SR1;
-    I2C1->DR = (dev_addr << 1) | 1;
-    if (wait_flag_set(&I2C1->SR1, I2C_SR1_ADDR) < 0) I2C_FAIL();
-
-    if (len == 1) {
-        I2C1->CR1 &= ~I2C_CR1_ACK;
-        __disable_irq();
-        (void)I2C1->SR1;
-        (void)I2C1->SR2;
-        I2C1->CR1 |= I2C_CR1_STOP;
-        __enable_irq();
-
-        if (wait_flag_set(&I2C1->SR1, I2C_SR1_RXNE) < 0) I2C_FAIL();
-        data[0] = (uint8_t)I2C1->DR;
-        return 1;
-    }
-
-    I2C1->CR1 |= I2C_CR1_ACK;
     (void)I2C1->SR1;
     (void)I2C1->SR2;
 
-    for (uint8_t i = 0; i < len; i++) {
-        if (i == (len - 2)) {
-            I2C1->CR1 &= ~I2C_CR1_ACK;
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_TXE) < 0) I2C_FAIL();
+    I2C1->DR = reg;
+
+    if (len && data) {
+        for (uint16_t i = 0; i < len; i++) {
+            if (wait_flag_set(&I2C1->SR1, I2C_SR1_TXE) < 0) I2C_FAIL();
+            I2C1->DR = data[i];
         }
-        if (wait_flag_set(&I2C1->SR1, I2C_SR1_RXNE) < 0) I2C_FAIL();
-        data[i] = (uint8_t)I2C1->DR;
     }
 
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) I2C_FAIL();
+
     I2C1->CR1 |= I2C_CR1_STOP;
+    return 1;
+}
+
+int i2c1_reg_read(uint8_t addr7, uint8_t reg, uint8_t *data, uint16_t len)
+{
+    if (!data || len == 0U) return -1;
+
+    if (wait_flag_clr(&I2C1->SR2, I2C_SR2_BUSY) < 0) I2C_FAIL();
+
+    if (i2c1_start_addr(addr7, 0) < 0) I2C_FAIL();
+
+    (void)I2C1->SR1;
+    (void)I2C1->SR2;
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_TXE) < 0) I2C_FAIL();
+    I2C1->DR = reg;
+
+    if (wait_flag_set(&I2C1->SR1, I2C_SR1_BTF) < 0) I2C_FAIL();
+
+    if (i2c1_start_addr(addr7, 1) < 0) I2C_FAIL();
+
+    if (i2c1_read_bytes(data, len) < 0) I2C_FAIL();
+
     return 1;
 }
 

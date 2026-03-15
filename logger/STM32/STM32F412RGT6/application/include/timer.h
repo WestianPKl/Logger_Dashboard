@@ -32,9 +32,8 @@ void timer3_pwm_ch2_set_duty(int32_t duty);
 void timer3_pwm_ch3_set_duty(int32_t duty);
 void timer3_pwm_ch4_set_duty(int32_t duty);
 
-void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b);
+void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness);
 
-void timer3_pwm_set_buzzer(int32_t duty);
 void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume);
 
 #endif // TIMER_H

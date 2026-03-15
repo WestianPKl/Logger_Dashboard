@@ -6,6 +6,8 @@
 #define ADC1_CH0_PIN 0U
 #define ADC1_CH1_PIN 1U
 
+uint16_t adc_data_buffer[ADC_BUFFER_SIZE];
+
 void adc1_init(uint8_t continuous_mode, uint16_t *dst, uint16_t len)
 {
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
