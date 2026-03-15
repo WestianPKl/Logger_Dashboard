@@ -179,6 +179,7 @@ int main(void)
 
             if (display_present) {
                 lcd_init();
+                lcd_backlight(0);
             } else {
                 if (lcd_is_present()) {
                     lcd_clear();
