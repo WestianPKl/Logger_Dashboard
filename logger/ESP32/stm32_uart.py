@@ -129,6 +129,26 @@ class STM32UART:
     def vadc_to_vin(self, vadc, r_top=200_000.0, r_bottom=68_000.0):
         return vadc * (r_top + r_bottom) / r_bottom
 
+    def unpack_log_timestamp(self, ts: int):
+        year = (ts >> 26) & 0x3F
+        month = (ts >> 22) & 0x0F
+        day = (ts >> 17) & 0x1F
+        hour = (ts >> 12) & 0x1F
+        minute = (ts >> 6) & 0x3F
+        second = ts & 0x3F
+
+        return {
+            "year": 2000 + year,
+            "month": month,
+            "day": day,
+            "hour": hour,
+            "minute": minute,
+            "second": second,
+            "iso": "20{:02d}-{:02d}-{:02d}T{:02d}:{:02d}:{:02d}".format(
+                year, month, day, hour, minute, second
+            ),
+        }
+
     def _send_cmd(self, cmd, param=0, payload=b"", check_status=True):
         resp = self.uart_loop_application(
             self.uart_message_application(cmd, param, payload)
@@ -184,17 +204,17 @@ class STM32UART:
             return [0.0, 0.0, 0.0]
         return [
             self.i32_from_be(p, 0) / 100.0,
-            self.u32_from_be(p, 4) / 1024.0,
-            self.u32_from_be(p, 8) / 25600.0,
+            self.u32_from_be(p, 4) / 100.0,
+            self.u32_from_be(p, 8) / 100.0,
         ]
 
     def req_lcd_clear(self):
         p = self._send_cmd(0x03, 0x02)
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_lcd_set_backlight(self, on: int):
         p = self._send_cmd(0x03, 0x03, bytes([on & 0xFF]))
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_get_input_states(self, channel: int):
         p = self._send_cmd(0x02, channel)
@@ -208,11 +228,11 @@ class STM32UART:
 
     def req_set_output(self, channel: int, on: int):
         p = self._send_cmd(0x04, channel, bytes([on & 0xFF]))
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_set_pwm(self, channel: int, duty: int):
         p = self._send_cmd(0x05, channel, bytes([duty & 0xFF]))
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_set_rgb(self, r: int, g: int, b: int, brightness: int):
         p = self._send_cmd(
@@ -270,16 +290,16 @@ class STM32UART:
     def req_rtc_wakeup(self, seconds: int):
         pl = bytes([(seconds >> 8) & 0xFF, seconds & 0xFF])
         p = self._send_cmd(0x06, 0x02, pl)
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_alarm_set(self, hh: int, mi: int, ss: int, daily: int = 1):
         pl = bytes([hh & 0xFF, mi & 0xFF, ss & 0xFF, daily & 0xFF])
         p = self._send_cmd(0x06, 0x03, pl)
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_alarm_off(self):
         p = self._send_cmd(0x06, 0x04)
-        return p[0] if p else 0
+        return 1 if p is not None else 0
 
     def req_timestamp(self):
         p = self._send_cmd(0x06, 0x05)
@@ -425,4 +445,79 @@ class STM32UART:
 
     def req_reset(self):
         p = self._send_cmd(0x99, 0x99)
-        return p[0] if p else 0
+        return 1 if p is not None else 0
+
+    def req_log_count(self):
+        p = self._send_cmd(0x08, 0x14)
+        if not p:
+            return 0
+        return self.u32_from_be(p, 0)
+
+    def req_log_read(self, index: int, newest_first: int = 0):
+        if index < 0:
+            return None
+
+        mode = 1 if newest_first else 0
+        pl = bytes(
+            [
+                mode & 0xFF,
+                (index >> 24) & 0xFF,
+                (index >> 16) & 0xFF,
+                (index >> 8) & 0xFF,
+                index & 0xFF,
+            ]
+        )
+
+        p = self._send_cmd(0x08, 0x13, pl)
+        if not p:
+            return None
+
+        ts = self.u32_from_be(p, 4)
+        pressure_pa = self.u32_from_be(p, 16)
+
+        rec = {
+            "sequence": self.u32_from_be(p, 0),
+            "timestamp": ts,
+            "datetime": self.unpack_log_timestamp(ts).get("iso", "").replace("T", " "),
+            "temperature": self.i32_from_be(p, 8) / 100.0,
+            "humidity": self.u32_from_be(p, 12) / 100.0,
+            "pressure_pa": pressure_pa,
+            "pressure_hpa": pressure_pa / 100.0,
+            "crc32": self.u32_from_be(p, 20),
+        }
+        return rec
+
+    def req_log_append(
+        self,
+        timestamp: int,
+        temperature_x100: int,
+        humidity_x100: int,
+        pressure_pa: int,
+    ):
+        pl = bytes(
+            [
+                (timestamp >> 24) & 0xFF,
+                (timestamp >> 16) & 0xFF,
+                (timestamp >> 8) & 0xFF,
+                timestamp & 0xFF,
+                (temperature_x100 >> 24) & 0xFF,
+                (temperature_x100 >> 16) & 0xFF,
+                (temperature_x100 >> 8) & 0xFF,
+                temperature_x100 & 0xFF,
+                (humidity_x100 >> 24) & 0xFF,
+                (humidity_x100 >> 16) & 0xFF,
+                (humidity_x100 >> 8) & 0xFF,
+                humidity_x100 & 0xFF,
+                (pressure_pa >> 24) & 0xFF,
+                (pressure_pa >> 16) & 0xFF,
+                (pressure_pa >> 8) & 0xFF,
+                pressure_pa & 0xFF,
+            ]
+        )
+
+        p = self._send_cmd(0x08, 0x12, pl)
+        return 1 if p is not None else 0
+
+    def req_log_clear(self):
+        p = self._send_cmd(0x08, 0x15)
+        return 1 if p is not None else 0

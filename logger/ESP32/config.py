@@ -2,7 +2,7 @@ class Config:
     def __init__(self):
         self.WIFI_ENABLED = 0
 
-        self.SECRET_PASS = ""
+        self.SECRET_PASS = "0xDG%#@!1137"
 
         self.LOGGER_ID = -1
         self.SENSOR_ID = -1
@@ -21,7 +21,7 @@ class Config:
         self.LED_GPIO = 22
 
         self.DEV_ADDR = 0xB2
-        self.FRAME_LEN_APP = 24
+        self.FRAME_LEN_APP = 32
         self.STATUS_OK = 0x40
         self.STATUS_ERR = 0x7F
 

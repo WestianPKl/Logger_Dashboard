@@ -45,6 +45,7 @@ from PySide6.QtWidgets import (
     QListView,
     QMainWindow,
     QMenuBar,
+    QProgressBar,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -56,6 +57,7 @@ from PySide6.QtWidgets import (
     QTableView,
     QTextBrowser,
     QToolBox,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -263,7 +265,6 @@ class Ui_MainWindow(object):
         )
 
         self.gridLayout_6.addItem(self.horizontalSpacer_9, 15, 0, 1, 6)
-
 
         self.bme_temperature = QLCDNumber(self.scrollAreaWidgetContents)
         self.bme_temperature.setObjectName("bme_temperature")
@@ -576,6 +577,49 @@ class Ui_MainWindow(object):
         self.gridLayout_5.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         self.tabWidget.addTab(self.tab_4, "")
+        self.tab_data_logs = QWidget()
+        self.tab_data_logs.setObjectName("tab_data_logs")
+        self.gridLayout_data_logs = QGridLayout(self.tab_data_logs)
+        self.gridLayout_data_logs.setObjectName("gridLayout_data_logs")
+
+        self.read_all_logs_button = QPushButton(self.tab_data_logs)
+        self.read_all_logs_button.setObjectName("read_all_logs_button")
+        self.gridLayout_data_logs.addWidget(self.read_all_logs_button, 0, 0, 1, 1)
+
+        self.export_logs_button = QPushButton(self.tab_data_logs)
+        self.export_logs_button.setObjectName("export_logs_button")
+        self.gridLayout_data_logs.addWidget(self.export_logs_button, 0, 1, 1, 1)
+
+        self.clear_logs_table_button = QPushButton(self.tab_data_logs)
+        self.clear_logs_table_button.setObjectName("clear_logs_table_button")
+        self.gridLayout_data_logs.addWidget(self.clear_logs_table_button, 0, 2, 1, 1)
+
+        self.logs_spacer = QSpacerItem(
+            40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
+        self.gridLayout_data_logs.addItem(self.logs_spacer, 0, 3, 1, 1)
+
+        self.log_count_label = QLabel(self.tab_data_logs)
+        self.log_count_label.setObjectName("log_count_label")
+        self.gridLayout_data_logs.addWidget(self.log_count_label, 0, 4, 1, 1)
+
+        self.data_logs_progress = QProgressBar(self.tab_data_logs)
+        self.data_logs_progress.setObjectName("data_logs_progress")
+        self.data_logs_progress.setValue(0)
+        self.data_logs_progress.setTextVisible(True)
+        self.data_logs_progress.hide()
+        self.gridLayout_data_logs.addWidget(self.data_logs_progress, 1, 0, 1, 5)
+
+        self.data_logs_table = QTableView(self.tab_data_logs)
+        self.data_logs_table.setObjectName("data_logs_table")
+        self.gridLayout_data_logs.addWidget(self.data_logs_table, 2, 0, 1, 5)
+
+        self.tabWidget.addTab(self.tab_data_logs, "")
+        self.tab_chart = QWidget()
+        self.tab_chart.setObjectName("tab_chart")
+        self.chart_layout = QVBoxLayout(self.tab_chart)
+        self.chart_layout.setObjectName("chart_layout")
+        self.tabWidget.addTab(self.tab_chart, "")
         self.tab_3 = QWidget()
         self.tab_3.setObjectName("tab_3")
         self.gridLayout_2 = QGridLayout(self.tab_3)
@@ -962,6 +1006,26 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_4),
             QCoreApplication.translate("MainWindow", "Data", None),
+        )
+        self.read_all_logs_button.setText(
+            QCoreApplication.translate("MainWindow", "Read All Logs", None)
+        )
+        self.export_logs_button.setText(
+            QCoreApplication.translate("MainWindow", "Export CSV", None)
+        )
+        self.clear_logs_table_button.setText(
+            QCoreApplication.translate("MainWindow", "Clear", None)
+        )
+        self.log_count_label.setText(
+            QCoreApplication.translate("MainWindow", "Logs: -", None)
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_data_logs),
+            QCoreApplication.translate("MainWindow", "Data Logs", None),
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_chart),
+            QCoreApplication.translate("MainWindow", "Chart", None),
         )
         self.logger_data_label.setText(
             QCoreApplication.translate("MainWindow", "Logger Data", None)

@@ -23,6 +23,7 @@
 #include "mx25l25673gm2i.h"
 #include "uart_protocol.h"
 #include "app_flags.h"
+#include "flash_log.h"
 
 void btn1_handler(void);
 void btn2_handler(void);
@@ -39,6 +40,8 @@ volatile uint8_t measure_flag_10min = 0;
 volatile uint8_t sht40_error_flag = 0;
 volatile uint8_t bme280_error_flag = 0;
 volatile uint8_t second_marker = 0;
+
+static uint16_t timer_10min_cnt = 0;
 
 volatile uint8_t i2c1_dma_tx_done = 0;
 volatile uint8_t i2c1_dma_rx_done = 0;
@@ -106,7 +109,6 @@ int main(void)
         bme280_present  = 0U;
         ina226_present  = 0U;
         adc_present     = 0U;
-
     }
 
     if (adc_present){
@@ -136,7 +138,9 @@ int main(void)
     }
 
     if (flash_present) {
-        mx25_init();
+        if (flash_log_init() != 1) {
+            flash_present = 0U;
+        }
     }
 
     if (ina226_present) {
@@ -179,7 +183,9 @@ int main(void)
 
             if (display_present) {
                 lcd_init();
-                lcd_backlight(0);
+                backlight_on = 0;
+                backlight_timer = 0;
+                backlight_toggle_flag = 1;
             } else {
                 if (lcd_is_present()) {
                     lcd_clear();
@@ -194,8 +200,9 @@ int main(void)
             }
 
             if (flash_present) {
-                mx25_init();
-                flash_sector_last_erased = 0xFFFFFFFFU;
+                if (flash_log_init() != 1) {
+                    flash_present = 0U;
+                }
             }
 
             if (ina226_present) {
@@ -263,8 +270,9 @@ int main(void)
                               &datetime.hours, &datetime.minutes, &datetime.seconds);
 
             if (bme280_present) {
-                int32_t  temp_c;
-                uint32_t hum_x1024, press_q24_8;
+                int32_t  temp_x100;
+                uint32_t hum_x100;
+                uint32_t press_pa;
 
                 bme280_error_flag = 1;
 
@@ -273,13 +281,11 @@ int main(void)
                     bme280_trigger_forced();
                     systick_delay_ms(10);
 
-                    if (bme280_read_data(&temp_c, &hum_x1024, &press_q24_8) == 0) {
-                        uint32_t hum_x100 = (hum_x1024 * 100U) / 1024U;
-
-                        if (!(temp_c < -4000 || temp_c > 8500 || hum_x100 > 10000 || press_q24_8 == 0)) {
-                            measurement_bme280.temperature = temp_c;
+                    if (bme280_read_data(&temp_x100, &hum_x100, &press_pa) == 0) {
+                        if (!(temp_x100 < -4000 || temp_x100 > 8500 || hum_x100 > 10000 || press_pa == 0)) {
+                            measurement_bme280.temperature = temp_x100;
                             measurement_bme280.humidity    = hum_x100;
-                            measurement_bme280.pressure    = press_q24_8;
+                            measurement_bme280.pressure    = press_pa;
                             bme280_error_flag = 0;
                         }
                     }
@@ -355,6 +361,24 @@ int main(void)
             esp32_status_set(0);
             esp32_timer = 1;
             esp32_on = 1;
+
+            if (flash_present) {
+                uint32_t timestamp = 0;
+
+                timestamp =
+                    ((uint32_t)datetime.year   << 26) |
+                    ((uint32_t)datetime.month  << 22) |
+                    ((uint32_t)datetime.day    << 17) |
+                    ((uint32_t)datetime.hours  << 12) |
+                    ((uint32_t)datetime.minutes << 6) |
+                    ((uint32_t)datetime.seconds);
+
+                if (bme280_present && !bme280_error_flag) {
+                    flash_log_append(timestamp, &measurement_bme280, 0);
+                } else if (sht40_present && !sht40_error_flag) {
+                    flash_log_append(timestamp, 0, &measurement_sht40);
+                }
+            }
         }
     }
 }
@@ -479,7 +503,9 @@ void TIM8_UP_TIM13_IRQHandler(void)
             }
         }
 
-        if ((tick_10ms % 60000U) == 0U) {
+        timer_10min_cnt++;
+        if (timer_10min_cnt >= 60000U) {
+            timer_10min_cnt = 0;
             measure_flag_10min = 1;
         }
     }

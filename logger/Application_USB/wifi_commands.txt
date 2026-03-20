@@ -668,3 +668,109 @@ Error responses are sent as:
   "type": "ERROR",
   "timestamp": yyy90
 }
+
+--------------------------------------------------
+
+28. READ_LOG_COUNT
+Args: none
+
+Example:
+READ_LOG_COUNT
+
+Response:
+OK:READ_LOG_COUNT,<count>
+
+Description:
+- Zwraca liczbę rekordów dostępnych aktualnie w logu.
+- count = 0 oznacza pusty log.
+
+--------------------------------------------------
+
+29. READ_LOG
+Args:
+- index
+- newest_first
+
+Rules:
+- index = logiczny numer rekordu, nie adres flash
+- newest_first = 0 -> czytaj od najstarszego
+- newest_first = 1 -> czytaj od najnowszego
+
+Examples:
+READ_LOG,0,0
+READ_LOG,0,1
+READ_LOG,15,0
+
+Response:
+OK:READ_LOG,{
+  'sequence': ...,
+  'timestamp': ...,
+  'datetime': {
+    'year': ...,
+    'month': ...,
+    'day': ...,
+    'hour': ...,
+    'minute': ...,
+    'second': ...,
+    'iso': 'YYYY-MM-DDTHH:MM:SS'
+  },
+  'temperature': ...,
+  'humidity': ...,
+  'pressure_pa': ...,
+  'pressure_hpa': ...,
+  'crc32': ...
+}
+
+Description:
+- index=0,newest_first=0 -> najstarszy rekord
+- index=0,newest_first=1 -> najnowszy rekord
+- index musi być mniejszy niż READ_LOG_COUNT
+
+Possible errors:
+ERR:READ_LOG_FORMAT
+ERR:READ_LOG_FAILED
+
+--------------------------------------------------
+
+30. WRITE_LOG
+Args:
+- timestamp
+- temperature_x100
+- humidity_x100
+- pressure_pa
+
+Rules:
+- timestamp = packed uint32 z loggera
+- temperature_x100 = temperatura * 100
+- humidity_x100 = wilgotność * 100
+- pressure_pa = ciśnienie w Pa
+- jeśli pressure_pa = 0, rekord traktowany jest jako SHT40
+- jeśli pressure_pa != 0, rekord traktowany jest jako BME280
+
+Examples:
+WRITE_LOG,1710000000,2534,4567,101325
+WRITE_LOG,1710000010,2512,4421,0
+
+Response:
+OK:WRITE_LOG,<timestamp>,<temperature_x100>,<humidity_x100>,<pressure_pa>,<ok>
+
+If service mode is disabled:
+ERR:WRITE_LOG_SERVICE_MODE_DISABLED
+
+--------------------------------------------------
+
+31. CLEAR_LOG
+Args: none
+
+Example:
+CLEAR_LOG
+
+Response:
+OK:CLEAR_LOG,<ok>
+
+Description:
+- Kasuje cały obszar loga i resetuje metadane loggera.
+- Po tej komendzie READ_LOG_COUNT powinno zwrócić 0.
+
+If service mode is disabled:
+ERR:CLEAR_LOG_SERVICE_MODE_DISABLED

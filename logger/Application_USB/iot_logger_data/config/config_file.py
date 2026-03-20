@@ -1,4 +1,4 @@
-from config import ConfigInformation
+from .config import ConfigInformation
 
 
 class ConfigFile:

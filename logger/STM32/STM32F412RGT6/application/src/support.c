@@ -30,3 +30,18 @@ uint16_t crc16_ccitt_false(const uint8_t *data, uint16_t len)
 
     return crc;
 }
+
+uint32_t crc32(const uint8_t *data, uint32_t len)
+{
+    uint32_t crc = 0xFFFFFFFFu;
+
+    for (uint32_t i = 0; i < len; ++i) {
+        crc ^= data[i];
+        for (uint32_t b = 0; b < 8u; ++b) {
+            if (crc & 1u) crc = (crc >> 1) ^ 0xEDB88320u;
+            else          crc >>= 1;
+        }
+    }
+
+    return crc;
+}

@@ -1,7 +1,12 @@
+import ast
+from datetime import datetime
 from pathlib import Path
 from PySide6.QtCore import QStringListModel, QTimer, Signal, Qt
 from PySide6.QtGui import QIcon, QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QProgressBar
+from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.figure import Figure
 from .ui.window import Ui_MainWindow
 from .device.device_manager import DeviceManager
 from .config.config import ConfigInformation
@@ -110,6 +115,23 @@ class IoTLoggerApp(QMainWindow):
 
         self.received_callback: Optional[Callable[[str], None]] = None
 
+        self._data_logs_model = QStandardItemModel(0, 6)
+        self._data_logs_model.setHorizontalHeaderLabels(
+            ["#", "Timestamp", "Temperature", "Humidity", "Pressure [hPa]", "CRC32"]
+        )
+        self.ui.data_logs_table.setModel(self._data_logs_model)
+        self.ui.data_logs_table.horizontalHeader().setStretchLastSection(True)
+
+        self._log_total = 0
+        self._log_index = 0
+        self._log_reading = False
+
+        self._figure = Figure(figsize=(5, 4), tight_layout=True)
+        self._canvas = FigureCanvas(self._figure)
+        self._nav_toolbar = NavigationToolbar(self._canvas, self)
+        self.ui.chart_layout.addWidget(self._nav_toolbar)
+        self.ui.chart_layout.addWidget(self._canvas)
+
         self.connect_signals()
         self.load_ports()
         self._set_connected_state(False)
@@ -155,8 +177,8 @@ class IoTLoggerApp(QMainWindow):
         self.ui.read_sht_button.clicked.connect(lambda: self._send("READ_SHT40"))
         self.ui.read_bme_button.clicked.connect(lambda: self._send("READ_BME280"))
         self.ui.set_pwm_button.clicked.connect(self.on_set_pwm)
-        self.ui.output_on_button.clicked.connect(self._on_output_on)
-        self.ui.output_off_button.clicked.connect(self._on_output_off)
+        self.ui.output_on_button.clicked.connect(lambda: self._on_set_output(1))
+        self.ui.output_off_button.clicked.connect(lambda: self._on_set_output(0))
 
         self.ui.save_connection_data_button.clicked.connect(
             self.on_save_connection_data
@@ -169,6 +191,10 @@ class IoTLoggerApp(QMainWindow):
 
         self.ui.save_log_button.clicked.connect(self.on_save_log)
         self.ui.clear_log_button.clicked.connect(self.on_clear_log)
+
+        self.ui.read_all_logs_button.clicked.connect(self.on_read_all_logs)
+        self.ui.export_logs_button.clicked.connect(self.on_export_logs_csv)
+        self.ui.clear_logs_table_button.clicked.connect(self.on_clear_logs_table)
 
     def _update_color_preview(self):
         r = self.ui.set_red_slider.value()
@@ -245,6 +271,12 @@ class IoTLoggerApp(QMainWindow):
                 elif cmd == "STATUS":
                     self._apply_status(rest)
 
+                elif cmd == "READ_LOG_COUNT":
+                    self._on_log_count_received(rest)
+
+                elif cmd == "READ_LOG":
+                    self._on_log_entry_received(rest)
+
             elif data.startswith("STATUS:"):
                 parts = data[7:].split(",")
                 if parts[0] == "ALIVE" and len(parts) >= 2:
@@ -261,40 +293,29 @@ class IoTLoggerApp(QMainWindow):
         except Exception as e:
             self.log_message(f"Response parse error: {e}", level="ERROR")
 
-    def _apply_flags(self, raw: str):
-        import ast
+    _FLAG_MAP = [
+        ("ext_rtc_flag", "FRAM_FLAG_EXT_RTC_PRESENT"),
+        ("flash_memory_flag", "FRAM_FLAG_FLASH_PRESENT"),
+        ("lcd_display_flag", "FRAM_FLAG_DISPLAY_PRESENT"),
+        ("sht_sensor_flag", "FRAM_FLAG_SHT40_PRESENT"),
+        ("bme_sensor_flag", "FRAM_FLAG_BME280_PRESENT"),
+        ("ina226_flag", "FRAM_FLAG_INA226_PRESENT"),
+        ("adc_measurement_flag", "FRAM_FLAG_ADC_PRESENT"),
+        ("network_enable_flag", "WIFI_ENABLED"),
+    ]
 
+    def _apply_flags(self, raw: str):
         flags = ast.literal_eval(raw)
-        self.ui.ext_rtc_flag.setChecked(bool(flags.get("FRAM_FLAG_EXT_RTC_PRESENT", 0)))
-        self.ui.flash_memory_flag.setChecked(
-            bool(flags.get("FRAM_FLAG_FLASH_PRESENT", 0))
-        )
-        self.ui.lcd_display_flag.setChecked(
-            bool(flags.get("FRAM_FLAG_DISPLAY_PRESENT", 0))
-        )
-        self.ui.sht_sensor_flag.setChecked(
-            bool(flags.get("FRAM_FLAG_SHT40_PRESENT", 0))
-        )
-        self.ui.bme_sensor_flag.setChecked(
-            bool(flags.get("FRAM_FLAG_BME280_PRESENT", 0))
-        )
-        self.ui.ina226_flag.setChecked(bool(flags.get("FRAM_FLAG_INA226_PRESENT", 0)))
-        self.ui.adc_measurement_flag.setChecked(
-            bool(flags.get("FRAM_FLAG_ADC_PRESENT", 0))
-        )
-        self.ui.network_enable_flag.setChecked(bool(flags.get("WIFI_ENABLED", 0)))
+        for attr, key in self._FLAG_MAP:
+            getattr(self.ui, attr).setChecked(bool(flags.get(key, 0)))
 
     def _apply_channels(self, combo_box, raw: str):
-        import ast
-
         channels = ast.literal_eval(raw)
         combo_box.clear()
         for ch in channels:
             combo_box.addItem(str(ch))
 
     def _apply_status(self, raw: str):
-        import ast
-
         status = ast.literal_eval(raw)
         self.status_model.removeRows(0, self.status_model.rowCount())
         labels = {
@@ -316,18 +337,21 @@ class IoTLoggerApp(QMainWindow):
             row[1].setFlags(row[1].flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.status_model.appendRow(row)
 
-    def _apply_config(self, raw: str):
-        import ast
+    _CONFIG_MAP = [
+        ("set_logger_id_line", "logger_id"),
+        ("set_sensor_id_line", "sensor_id"),
+        ("set_wifi_ssid_line", "wifi_ssid"),
+        ("set_wifi_password_line", "wifi_password"),
+        ("set_mqtt_server_line", "mqtt_server"),
+        ("set_ntp_server_line", "ntp_server"),
+        ("set_mqtt_user_line", "mqtt_user"),
+        ("set_mqtt_password_line", "mqtt_password"),
+    ]
 
+    def _apply_config(self, raw: str):
         config = ast.literal_eval(raw)
-        self.ui.set_logger_id_line.setText(str(config.get("logger_id", "")))
-        self.ui.set_sensor_id_line.setText(str(config.get("sensor_id", "")))
-        self.ui.set_wifi_ssid_line.setText(str(config.get("wifi_ssid", "")))
-        self.ui.set_wifi_password_line.setText(str(config.get("wifi_password", "")))
-        self.ui.set_mqtt_server_line.setText(str(config.get("mqtt_server", "")))
-        self.ui.set_ntp_server_line.setText(str(config.get("ntp_server", "")))
-        self.ui.set_mqtt_user_line.setText(str(config.get("mqtt_user", "")))
-        self.ui.set_mqtt_password_line.setText(str(config.get("mqtt_password", "")))
+        for attr, key in self._CONFIG_MAP:
+            getattr(self.ui, attr).setText(str(config.get(key, "")))
 
     def _send(self, command: str, *args):
         if self.device_manager.is_connected:
@@ -390,17 +414,10 @@ class IoTLoggerApp(QMainWindow):
         self.log_model.setStringList(self.log_entries)
         self.log_message("Log cleared")
 
-    def _on_output_on(self):
+    def _on_set_output(self, value: int):
         ch = self.ui.select_output_box.currentText()
         if ch:
-            self._send("SET_OUTPUT", ch, 1)
-        else:
-            self.log_message("Select an output channel first")
-
-    def _on_output_off(self):
-        ch = self.ui.select_output_box.currentText()
-        if ch:
-            self._send("SET_OUTPUT", ch, 0)
+            self._send("SET_OUTPUT", ch, value)
         else:
             self.log_message("Select an output channel first")
 
@@ -470,24 +487,220 @@ class IoTLoggerApp(QMainWindow):
         self._send("WRITE_SERVERS", mqtt_server, ntp_server)
         self._send("WRITE_MQTT_CREDENTIALS", mqtt_user, mqtt_pass)
 
+    _FLAG_BITS = [
+        "ext_rtc_flag",
+        "flash_memory_flag",
+        "lcd_display_flag",
+        "sht_sensor_flag",
+        "bme_sensor_flag",
+        "ina226_flag",
+        "adc_measurement_flag",
+    ]
+
     def on_save_flags(self):
-        flags = 0
-        if self.ui.ext_rtc_flag.isChecked():
-            flags |= 1 << 0
-        if self.ui.flash_memory_flag.isChecked():
-            flags |= 1 << 1
-        if self.ui.lcd_display_flag.isChecked():
-            flags |= 1 << 2
-        if self.ui.sht_sensor_flag.isChecked():
-            flags |= 1 << 3
-        if self.ui.bme_sensor_flag.isChecked():
-            flags |= 1 << 4
-        if self.ui.ina226_flag.isChecked():
-            flags |= 1 << 5
-        if self.ui.adc_measurement_flag.isChecked():
-            flags |= 1 << 6
-        network = 1 if self.ui.network_enable_flag.isChecked() else 0
+        flags = sum(
+            (1 << i)
+            for i, attr in enumerate(self._FLAG_BITS)
+            if getattr(self.ui, attr).isChecked()
+        )
+        network = int(self.ui.network_enable_flag.isChecked())
         self._send("WRITE_FLAGS", hex(flags), network)
+
+    def on_read_all_logs(self):
+        if not self.device_manager.is_connected:
+            self.log_message("Not connected. Connect first.")
+            return
+        if self._log_reading:
+            self.log_message("Log reading already in progress.")
+            return
+        self._data_logs_model.removeRows(0, self._data_logs_model.rowCount())
+        self._send("READ_LOG_COUNT")
+
+    def _on_log_count_received(self, rest: str):
+        try:
+            self._log_total = int(rest.strip())
+        except ValueError:
+            self.log_message(f"Invalid log count: {rest}", level="ERROR")
+            return
+        self.ui.log_count_label.setText(f"Logs: {self._log_total}")
+        if self._log_total == 0:
+            self.log_message("No logs on device.")
+            return
+        self._log_index = 0
+        self._log_reading = True
+        self.ui.data_logs_progress.setRange(0, self._log_total)
+        self.ui.data_logs_progress.setValue(0)
+        self.ui.data_logs_progress.show()
+        self.ui.read_all_logs_button.setEnabled(False)
+        self._request_next_log()
+
+    def _request_next_log(self):
+        if self._log_index < self._log_total:
+            self._send("READ_LOG", self._log_index, 0)
+        else:
+            self._log_reading = False
+            self.ui.data_logs_progress.hide()
+            self.ui.read_all_logs_button.setEnabled(True)
+            self.log_message(f"All {self._log_total} logs loaded.")
+            self._update_chart()
+
+    def _on_log_entry_received(self, rest: str):
+        try:
+            entry = ast.literal_eval(rest)
+            dt = entry.get("datetime", {})
+            iso = dt.get("iso", "") if isinstance(dt, dict) else str(dt)
+            timestamp = (
+                iso.replace("T", " ") if iso else str(entry.get("timestamp", ""))
+            )
+
+            row = [
+                QStandardItem(str(entry.get("sequence", self._log_index))),
+                QStandardItem(timestamp),
+                QStandardItem(str(entry.get("temperature", ""))),
+                QStandardItem(str(entry.get("humidity", ""))),
+                QStandardItem(str(entry.get("pressure_hpa", ""))),
+                QStandardItem(str(entry.get("crc32", ""))),
+            ]
+            for item in row:
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
+            self._data_logs_model.appendRow(row)
+
+            self._log_index += 1
+            self.ui.data_logs_progress.setValue(self._log_index)
+        except Exception as e:
+            self.log_message(f"Log parse error: {e}", level="ERROR")
+            self._log_index += 1
+        self._request_next_log()
+
+    def on_export_logs_csv(self):
+        if self._data_logs_model.rowCount() == 0:
+            self.log_message("No data to export.")
+            return
+        file_name, _ = QFileDialog.getSaveFileName(
+            self, "Export Logs", "", "CSV Files (*.csv);;All Files (*)"
+        )
+        if file_name:
+            try:
+                with open(file_name, "w", encoding="utf-8") as f:
+                    headers = []
+                    for col in range(self._data_logs_model.columnCount()):
+                        headers.append(
+                            self._data_logs_model.headerData(
+                                col, Qt.Orientation.Horizontal
+                            )
+                        )
+                    f.write(",".join(headers) + "\n")
+                    for row_idx in range(self._data_logs_model.rowCount()):
+                        cells = []
+                        for col in range(self._data_logs_model.columnCount()):
+                            item = self._data_logs_model.item(row_idx, col)
+                            cells.append(item.text() if item else "")
+                        f.write(",".join(cells) + "\n")
+                self.log_message(f"Logs exported to {file_name}")
+            except Exception as e:
+                self.log_message(f"Error exporting logs: {e}", level="ERROR")
+
+    def on_clear_logs_table(self):
+        self._data_logs_model.removeRows(0, self._data_logs_model.rowCount())
+        self.ui.log_count_label.setText("Logs: -")
+        self._clear_chart()
+        self.log_message("Logs table cleared.")
+
+    def _update_chart(self):
+        timestamps = []
+        temperatures = []
+        humidities = []
+        pressures = []
+        for row_idx in range(self._data_logs_model.rowCount()):
+            ts_item = self._data_logs_model.item(row_idx, 1)
+            temp_item = self._data_logs_model.item(row_idx, 2)
+            hum_item = self._data_logs_model.item(row_idx, 3)
+            pres_item = self._data_logs_model.item(row_idx, 4)
+            try:
+                timestamps.append(
+                    datetime.fromisoformat(ts_item.text()) if ts_item else None
+                )
+            except (ValueError, AttributeError):
+                timestamps.append(row_idx)
+            try:
+                temperatures.append(
+                    float(temp_item.text()) if temp_item and temp_item.text() else None
+                )
+            except ValueError:
+                temperatures.append(None)
+            try:
+                humidities.append(
+                    float(hum_item.text()) if hum_item and hum_item.text() else None
+                )
+            except ValueError:
+                humidities.append(None)
+            try:
+                pressures.append(
+                    float(pres_item.text()) if pres_item and pres_item.text() else None
+                )
+            except ValueError:
+                pressures.append(None)
+
+        self._figure.clear()
+        has_pressure = any(p is not None and p > 0 for p in pressures)
+
+        x = list(range(len(timestamps)))
+        x_labels = [
+            t.strftime("%H:%M:%S") if isinstance(t, datetime) else str(t)
+            for t in timestamps
+        ]
+
+        ax1 = self._figure.add_subplot(111)
+        ax1.plot(
+            x,
+            temperatures,
+            color="tab:red",
+            marker=".",
+            markersize=3,
+            linewidth=1,
+            label="Temperature [°C]",
+        )
+        ax1.set_ylabel("Temperature [°C] / Humidity [%]")
+        ax1.plot(
+            x,
+            humidities,
+            color="tab:blue",
+            marker=".",
+            markersize=3,
+            linewidth=1,
+            label="Humidity [%]",
+        )
+
+        if has_pressure:
+            ax2 = ax1.twinx()
+            ax2.plot(
+                x,
+                pressures,
+                color="tab:green",
+                marker=".",
+                markersize=3,
+                linewidth=1,
+                label="Pressure [hPa]",
+            )
+            ax2.set_ylabel("Pressure [hPa]")
+            lines2, labels2 = ax2.get_legend_handles_labels()
+        else:
+            lines2, labels2 = [], []
+
+        ax1.grid(True, alpha=0.3)
+        lines1, labels1 = ax1.get_legend_handles_labels()
+        ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper left", fontsize=7)
+
+        step = max(1, len(x) // 10)
+        ax1.set_xticks(x[::step])
+        ax1.set_xticklabels(x_labels[::step], rotation=45, ha="right", fontsize=7)
+        ax1.set_xlabel("Time")
+
+        self._canvas.draw()
+
+    def _clear_chart(self):
+        self._figure.clear()
+        self._canvas.draw()
 
     def on_save_log(self):
         file_name, _ = QFileDialog.getSaveFileName(
@@ -508,8 +721,6 @@ class IoTLoggerApp(QMainWindow):
         self.log_message("Log cleared")
 
     def log_message(self, message, level="INFO"):
-        from datetime import datetime
-
         timestamp = datetime.now().strftime("%H:%M:%S")
         log_entry = f"[{timestamp}] [{level}] {message}"
         self.log_entries.append(log_entry)

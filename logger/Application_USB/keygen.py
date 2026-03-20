@@ -1,7 +1,7 @@
 import hashlib
 from datetime import date
 
-SECRET = ""
+SECRET = "0xDG%#@!1137"
 
 
 def generate_daily_password(day=None):

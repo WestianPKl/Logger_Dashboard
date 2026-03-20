@@ -719,6 +719,94 @@ class Program:
                         "ip_address": self.ip_address,
                     },
                 )
+            elif cmd == "READ_LOG_COUNT":
+                cnt = self.stm32.req_log_count()
+                self.send_status(
+                    "LOG_COUNT",
+                    "STATUS",
+                    {
+                        "count": cnt,
+                        "communication_sw": self.status_data.get("version", ""),
+                        "communication_build": self.status_data.get("build", ""),
+                        "logger_id": self.status_data.get("logger_id", ""),
+                        "sensor_id": self.status_data.get("sensor_id", ""),
+                        "ip_address": self.ip_address,
+                    },
+                )
+            elif cmd == "READ_LOG":
+                index = int(params.get("index", 0))
+                newest_first = 1 if params.get("newest_first", 0) else 0
+
+                rec = self.stm32.req_log_read(index, newest_first)
+                if rec is None:
+                    raise Exception("Failed to read log record")
+
+                self.send_status(
+                    "LOG_READ",
+                    "STATUS",
+                    {
+                        "index": index,
+                        "newest_first": newest_first,
+                        "record": rec,
+                        "communication_sw": self.status_data.get("version", ""),
+                        "communication_build": self.status_data.get("build", ""),
+                        "logger_id": self.status_data.get("logger_id", ""),
+                        "sensor_id": self.status_data.get("sensor_id", ""),
+                        "ip_address": self.ip_address,
+                    },
+                )
+            elif cmd == "WRITE_LOG":
+                if not self.service_mode:
+                    raise Exception("Log write command is only allowed in service mode")
+
+                timestamp = int(params.get("timestamp", 0))
+                temperature_x100 = int(params.get("temperature_x100", 0))
+                humidity_x100 = int(params.get("humidity_x100", 0))
+                pressure_pa = int(params.get("pressure_pa", 0))
+
+                ok = self.stm32.req_log_append(
+                    timestamp,
+                    temperature_x100,
+                    humidity_x100,
+                    pressure_pa,
+                )
+
+                self.send_status(
+                    "LOG_WRITE",
+                    "STATUS",
+                    {
+                        "ok": ok,
+                        "timestamp": timestamp,
+                        "temperature_x100": temperature_x100,
+                        "humidity_x100": humidity_x100,
+                        "pressure_pa": pressure_pa,
+                        "communication_sw": self.status_data.get("version", ""),
+                        "communication_build": self.status_data.get("build", ""),
+                        "logger_id": self.status_data.get("logger_id", ""),
+                        "sensor_id": self.status_data.get("sensor_id", ""),
+                        "ip_address": self.ip_address,
+                    },
+                )
+
+            elif cmd == "CLEAR_LOG":
+                if not self.service_mode:
+                    raise Exception("Log clear command is only allowed in service mode")
+
+                ok = self.stm32.req_log_clear()
+
+                self.send_status(
+                    "LOG_CLEARED",
+                    "STATUS",
+                    {
+                        "ok": ok,
+                        "communication_sw": self.status_data.get("version", ""),
+                        "communication_build": self.status_data.get("build", ""),
+                        "logger_id": self.status_data.get("logger_id", ""),
+                        "sensor_id": self.status_data.get("sensor_id", ""),
+                        "ip_address": self.ip_address,
+                    },
+                )
+
             elif cmd == "SERVICE_MODE_ENABLE":
                 if self.service_mode:
                     raise Exception("Service mode is already enabled")
@@ -1276,6 +1364,60 @@ class Program:
                         mqtt_user, mqtt_password_masked, ok
                     )
                 )
+
+            elif cmd == "READ_LOG_COUNT":
+                cnt = self.stm32.req_log_count()
+                print("OK:READ_LOG_COUNT,{}".format(cnt))
+
+            elif cmd == "READ_LOG":
+                if len(data) < 2:
+                    print("ERR:READ_LOG_FORMAT")
+                    return
+
+                index = int(data[1], 0)
+                newest_first = int(data[2], 0) if len(data) >= 3 else 0
+
+                rec = self.stm32.req_log_read(index, newest_first)
+                if rec is None:
+                    print("ERR:READ_LOG_FAILED")
+                    return
+
+                print("OK:READ_LOG,{}".format(rec))
+
+            elif cmd == "WRITE_LOG":
+                if not self.service_mode:
+                    print("ERR:WRITE_LOG_SERVICE_MODE_DISABLED")
+                    return
+
+                if len(data) < 5:
+                    print("ERR:WRITE_LOG_FORMAT")
+                    return
+
+                timestamp = int(data[1], 0)
+                temperature_x100 = int(data[2], 0)
+                humidity_x100 = int(data[3], 0)
+                pressure_pa = int(data[4], 0)
+
+                ok = self.stm32.req_log_append(
+                    timestamp,
+                    temperature_x100,
+                    humidity_x100,
+                    pressure_pa,
+                )
+
+                print(
+                    "OK:WRITE_LOG,{},{},{},{},{}".format(
+                        timestamp, temperature_x100, humidity_x100, pressure_pa, ok
+                    )
+                )
+
+            elif cmd == "CLEAR_LOG":
+                if not self.service_mode:
+                    print("ERR:CLEAR_LOG_SERVICE_MODE_DISABLED")
+                    return
+
+                ok = self.stm32.req_log_clear()
+                print("OK:CLEAR_LOG,{}".format(ok))
 
             elif cmd == "SERVICE_MODE_ENABLE":
                 if self.service_mode:

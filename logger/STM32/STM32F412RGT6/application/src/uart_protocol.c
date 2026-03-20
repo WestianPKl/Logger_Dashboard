@@ -21,6 +21,7 @@
 #include "fm24cl16b.h"
 #include "mx25l25673gm2i.h"
 #include "version.h"
+#include "flash_log.h"
 
 #define STATUS_OK       0x40
 #define ERROR_RESPONSE  0x7F
@@ -31,8 +32,6 @@ volatile uint8_t uart1_tx_busy;
 uint8_t uart2_rx_buf[UART2_RX_BUFFER_SIZE];
 uint8_t uart2_tx_frame[FRAME_LEN_APP];
 volatile uint16_t uart2_rx_old_pos;
-
-uint32_t flash_sector_last_erased;
 
 uint8_t uart2_frame_acc[UART2_RX_FRAME_LEN];
 volatile uint16_t uart2_frame_idx;
@@ -85,13 +84,16 @@ static void handle_response(uint8_t status, uint8_t cmd, uint8_t param,
     uint8_t resp[FRAME_LEN_APP];
     memset(resp, 0, sizeof(resp));
 
+    if (payload_len > FRAME_PAYLOAD) {
+        return;
+    }
+
     resp[0] = DEV_ADDR;
     resp[1] = status;
     resp[2] = cmd;
     resp[3] = param;
 
     if (payload && payload_len) {
-        if (payload_len > FRAME_PAYLOAD) payload_len = FRAME_PAYLOAD;
         memcpy(&resp[4], payload, payload_len);
     }
 
@@ -772,7 +774,7 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
             break;
         }
 
-        case 0x0810: /*SERVICE: Write data to SPI flash (up to 15 bytes) */
+        case 0x0810: /* SERVICE: Raw write data to SPI flash (up to 15 bytes, no erase) */
         {
             if (!flash_present) {
                 uint8_t err = 1;
@@ -787,23 +789,19 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
 
             uint8_t data_len = req[8];
 
-            if (data_len == 0U || data_len > 15U) {
+            if (data_len == 0u || data_len > 15u) {
                 handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
                 break;
             }
 
-            if ((addr + data_len) > MX25L25673GM2I_SIZE_BYTES) {
+            if (addr >= MX25_SIZE_BYTES) {
                 handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
                 break;
             }
 
-            uint32_t sector_addr = addr & ~(MX25L25673GM2I_SECTOR_SIZE - 1);
-            if (sector_addr != flash_sector_last_erased) {
-                if (mx25_sector_erase_4k(sector_addr) != 1) {
-                    handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
-                    break;
-                }
-                flash_sector_last_erased = sector_addr;
+            if (data_len > (MX25_SIZE_BYTES - addr)) {
+                handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
+                break;
             }
 
             if (mx25_write(addr, &req[9], data_len) != 1) {
@@ -815,7 +813,7 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
             break;
         }
 
-        case 0x0811: /*SERVICE: Read data from SPI flash (up to 16 bytes) */
+        case 0x0811: /* SERVICE: Read data from SPI flash (up to 16 bytes) */
         {
             if (!flash_present) {
                 uint8_t err = 1;
@@ -831,12 +829,17 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
             uint8_t data_len = req[8];
             uint8_t data[16] = {0};
 
-            if (data_len == 0U || data_len > 16U) {
+            if (data_len == 0u || data_len > 16u) {
                 handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
                 break;
             }
 
-            if ((addr + data_len) > MX25L25673GM2I_SIZE_BYTES) {
+            if (addr >= MX25_SIZE_BYTES) {
+                handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
+                break;
+            }
+
+            if (data_len > (MX25_SIZE_BYTES - addr)) {
                 handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
                 break;
             }
@@ -847,6 +850,189 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
             }
 
             handle_response(STATUS_OK, cmd, param_addr, data, data_len, use_uart1);
+            break;
+        }
+
+        case 0x0812: /* SERVICE: Append log record from external host */
+        {
+            if (!flash_present) {
+                uint8_t err = 1;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            uint32_t timestamp =
+                ((uint32_t)req[4] << 24) |
+                ((uint32_t)req[5] << 16) |
+                ((uint32_t)req[6] << 8)  |
+                ((uint32_t)req[7]);
+
+            int32_t temp =
+                ((int32_t)req[8]  << 24) |
+                ((int32_t)req[9]  << 16) |
+                ((int32_t)req[10] << 8)  |
+                ((int32_t)req[11]);
+
+            uint32_t hum =
+                ((uint32_t)req[12] << 24) |
+                ((uint32_t)req[13] << 16) |
+                ((uint32_t)req[14] << 8)  |
+                ((uint32_t)req[15]);
+
+            uint32_t press =
+                ((uint32_t)req[16] << 24) |
+                ((uint32_t)req[17] << 16) |
+                ((uint32_t)req[18] << 8)  |
+                ((uint32_t)req[19]);
+
+            if (press == 0u) {
+                measurement_sht40_t sht;
+
+                if (temp < -32768L || temp > 32767L || hum > 65535u) {
+                    uint8_t err = 2;
+                    handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                    break;
+                }
+
+                sht.temperature = (int16_t)temp;
+                sht.humidity    = (uint16_t)hum;
+
+                if (flash_log_append(timestamp, 0, &sht) != 1) {
+                    uint8_t err = 3;
+                    handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                    break;
+                }
+            } else {
+                measurement_bme280_t bme;
+
+                bme.temperature = temp;
+                bme.humidity    = hum;
+                bme.pressure    = press;
+
+                if (flash_log_append(timestamp, &bme, 0) != 1) {
+                    uint8_t err = 3;
+                    handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                    break;
+                }
+            }
+
+            handle_response(STATUS_OK, cmd, param_addr, NULL, 0, use_uart1);
+            break;
+        }
+
+        case 0x0813: /* READ: Get log record by index */
+        {
+            flash_log_record_t rec;
+            uint8_t mode = req[4];
+            uint8_t data[24];
+
+            uint32_t index =
+                ((uint32_t)req[5] << 24) |
+                ((uint32_t)req[6] << 16) |
+                ((uint32_t)req[7] << 8)  |
+                ((uint32_t)req[8]);
+
+            int rc;
+
+            if (!flash_present) {
+                uint8_t err = 1;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            if (sizeof(flash_log_record_t) > FRAME_PAYLOAD) {
+                uint8_t err = 4;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            if (mode == 0u) {
+                rc = flash_log_read_oldest(index, &rec);
+            } else if (mode == 1u) {
+                rc = flash_log_read_latest(index, &rec);
+            } else {
+                uint8_t err = 2;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            if (rc != 1) {
+                uint8_t err = 3;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            data[0]  = (uint8_t)(rec.sequence >> 24);
+            data[1]  = (uint8_t)(rec.sequence >> 16);
+            data[2]  = (uint8_t)(rec.sequence >> 8);
+            data[3]  = (uint8_t)(rec.sequence);
+
+            data[4]  = (uint8_t)(rec.timestamp >> 24);
+            data[5]  = (uint8_t)(rec.timestamp >> 16);
+            data[6]  = (uint8_t)(rec.timestamp >> 8);
+            data[7]  = (uint8_t)(rec.timestamp);
+
+            data[8]  = (uint8_t)(((uint32_t)rec.temp_x100) >> 24);
+            data[9]  = (uint8_t)(((uint32_t)rec.temp_x100) >> 16);
+            data[10] = (uint8_t)(((uint32_t)rec.temp_x100) >> 8);
+            data[11] = (uint8_t)(((uint32_t)rec.temp_x100));
+
+            data[12] = (uint8_t)(rec.hum_x100 >> 24);
+            data[13] = (uint8_t)(rec.hum_x100 >> 16);
+            data[14] = (uint8_t)(rec.hum_x100 >> 8);
+            data[15] = (uint8_t)(rec.hum_x100);
+
+            data[16] = (uint8_t)(rec.press_pa >> 24);
+            data[17] = (uint8_t)(rec.press_pa >> 16);
+            data[18] = (uint8_t)(rec.press_pa >> 8);
+            data[19] = (uint8_t)(rec.press_pa);
+
+            data[20] = (uint8_t)(rec.crc32 >> 24);
+            data[21] = (uint8_t)(rec.crc32 >> 16);
+            data[22] = (uint8_t)(rec.crc32 >> 8);
+            data[23] = (uint8_t)(rec.crc32);
+
+            handle_response(STATUS_OK, cmd, param_addr, data, sizeof(data), use_uart1);
+            break;
+        }
+
+        case 0x0814: /* READ: Get log count */
+        {
+            uint32_t cnt;
+            uint8_t data[4];
+
+            if (!flash_present) {
+                uint8_t err = 1;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            cnt = flash_log_count();
+
+            data[0] = (uint8_t)(cnt >> 24);
+            data[1] = (uint8_t)(cnt >> 16);
+            data[2] = (uint8_t)(cnt >> 8);
+            data[3] = (uint8_t)(cnt);
+
+            handle_response(STATUS_OK, cmd, param_addr, data, 4, use_uart1);
+            break;
+        }
+
+        case 0x0815: /* SERVICE: Clear whole log area */
+        {
+            if (!flash_present) {
+                uint8_t err = 1;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            if (flash_log_clear() != 1) {
+                uint8_t err = 2;
+                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
+                break;
+            }
+
+            handle_response(STATUS_OK, cmd, param_addr, NULL, 0, use_uart1);
             break;
         }
 

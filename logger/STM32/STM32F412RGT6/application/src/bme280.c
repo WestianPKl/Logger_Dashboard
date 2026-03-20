@@ -247,16 +247,24 @@ static uint32_t bme280_compensate_P(int32_t adc_P)
     return (uint32_t)p;
 }
 
-uint8_t bme280_read_data(int32_t *temp_c, uint32_t *hum_pct, uint32_t *press_hPa)
+uint8_t bme280_read_data(int32_t *temp_x100, uint32_t *hum_x100, uint32_t *press_pa)
 {
-    if (!temp_c || !hum_pct || !press_hPa) return 1;
+    if (!temp_x100 || !hum_x100 || !press_pa) return 1;
 
     int32_t adc_P, adc_T, adc_H;
+    uint32_t hum_x1024;
+    uint32_t press_q24_8;
+
     if (bme280_read_raw(&adc_P, &adc_T, &adc_H)) return 1;
 
-    *temp_c    = bme280_compensate_T_x100(adc_T);
-    *hum_pct   = bme280_compensate_H_x1024(adc_H);
-    *press_hPa = bme280_compensate_P(adc_P);
+    *temp_x100 = bme280_compensate_T_x100(adc_T);
+
+    hum_x1024 = bme280_compensate_H_x1024(adc_H);
+    if (hum_x1024 > 102400U) hum_x1024 = 102400U;
+    *hum_x100 = (hum_x1024 * 100U) / 1024U;
+
+    press_q24_8 = bme280_compensate_P(adc_P);
+    *press_pa = press_q24_8 / 256U;
 
     return 0;
 }

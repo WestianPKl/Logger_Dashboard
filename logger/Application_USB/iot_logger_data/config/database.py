@@ -1,62 +1,47 @@
 import os
 import sys
 import sqlite3
-from config import ConfigInformation
+from .config import ConfigInformation
 
 
 class DatabaseConnection:
     def __init__(self, query, data=""):
-        self.__path = ConfigInformation.DATABASE_FILE
         self.query = query
         self.data = data
-        self.__relative_path = self.__resource_path()
+        self._db_path = self._resource_path()
 
-    def __resource_path(self):
+    @staticmethod
+    def _resource_path():
         try:
             base_path = sys._MEIPASS
-        except Exception:
+        except AttributeError:
             base_path = os.path.abspath(".")
-        return os.path.join(base_path, self.__path)
+        return os.path.join(base_path, ConfigInformation.DATABASE_FILE)
 
-    def __init_connection(self):
-        self.__conn = sqlite3.connect(self.__relative_path)
-        self.__cur = self.__conn.cursor()
+    def _execute(self, query, data, *, fetch=None, commit=False):
+        conn = sqlite3.connect(self._db_path)
+        try:
+            cur = conn.cursor()
+            cur.execute(query, data) if data else cur.execute(query)
+            if commit:
+                conn.commit()
+                return None
+            if fetch == "one":
+                row = cur.fetchone()
+                return row[0] if row else None
+            return cur.fetchall()
+        finally:
+            conn.close()
 
     def get_data(self):
-        self.__init_connection()
-        if self.data != "":
-            self.__cur.execute(self.query, self.data)
-        else:
-            self.__cur.execute(self.query)
-        data = self.__cur.fetchall()
-        self.__conn.close()
-        return data
+        return self._execute(self.query, self.data)
 
     def get_one_data(self):
-        self.__init_connection()
-        if self.data != "":
-            self.__cur.execute(self.query, self.data)
-        else:
-            self.__cur.execute(self.query)
-        row = self.__cur.fetchone()
-        data = row[0] if row else None
-        self.__conn.close()
-        return data
+        return self._execute(self.query, self.data, fetch="one")
 
-    def add_data(self):
-        self.__init_connection()
-        self.__cur.execute(self.query, self.data)
-        self.__conn.commit()
-        self.__conn.close()
+    def execute(self):
+        self._execute(self.query, self.data, commit=True)
 
-    def update_data(self):
-        self.__init_connection()
-        self.__cur.execute(self.query, self.data)
-        self.__conn.commit()
-        self.__conn.close()
-
-    def delete_data(self):
-        self.__init_connection()
-        self.__cur.execute(self.query, self.data)
-        self.__conn.commit()
-        self.__conn.close()
+    add_data = execute
+    update_data = execute
+    delete_data = execute
