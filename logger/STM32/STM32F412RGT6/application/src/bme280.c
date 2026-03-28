@@ -60,9 +60,14 @@ typedef struct {
 static bme280_calib_t calib;
 static int32_t t_fine = 0;
 
+#define SPI_DMA_TIMEOUT 200000U
+
 static void spi1_dma_wait_done(void)
 {
-    while (!(spi1_dma_rx_done && spi1_dma_tx_done)) {}
+    uint32_t t = SPI_DMA_TIMEOUT;
+    while (!(spi1_dma_rx_done && spi1_dma_tx_done)) {
+        if (--t == 0U) break;
+    }
     spi1_dma_rx_done = 0;
     spi1_dma_tx_done = 0;
 }

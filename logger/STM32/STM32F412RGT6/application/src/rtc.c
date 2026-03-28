@@ -47,7 +47,10 @@ static void rtc_backup_domain_unlock(void)
     (void)RCC->APB1ENR;
 
     PWR->CR |= PWR_CR_DBP;
-    while ((PWR->CR & PWR_CR_DBP) == 0U) {}
+    uint32_t t = RTC_TIMEOUT_LOOP;
+    while ((PWR->CR & PWR_CR_DBP) == 0U) {
+        if (--t == 0U) break;
+    }
 }
 
 static void rtc_backup_domain_reset(void)
@@ -177,6 +180,8 @@ void rtc_init(void)
             if (wait_flag_ms(&RCC->BDCR, RCC_BDCR_LSERDY, LSE_STARTUP_MS) == 0) {
                 rtc_backup_domain_reset();
             } else {
+                RCC->CSR |= RCC_CSR_LSION;
+                (void)wait_flag_ms(&RCC->CSR, RCC_CSR_LSIRDY, LSI_STARTUP_MS);
                 (void)rtc_wait_for_synchro();
                 return;
             }

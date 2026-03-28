@@ -24,12 +24,18 @@ static void mx25_hold_high(void)
     MX25_HOLD_PORT->BSRR = (1U << MX25_HOLD_PIN);
 }
 
+#define SPI_POLL_TIMEOUT 100000U
+
 static uint8_t spi1_xfer8(uint8_t tx)
 {
-    while ((SPI1->SR & SPI_SR_TXE) == 0U) {}
+    uint32_t t;
+
+    t = SPI_POLL_TIMEOUT;
+    while ((SPI1->SR & SPI_SR_TXE) == 0U) { if (--t == 0U) break; }
     *((__IO uint8_t *)&SPI1->DR) = tx;
 
-    while ((SPI1->SR & SPI_SR_RXNE) == 0U) {}
+    t = SPI_POLL_TIMEOUT;
+    while ((SPI1->SR & SPI_SR_RXNE) == 0U) { if (--t == 0U) break; }
     return *((__IO uint8_t *)&SPI1->DR);
 }
 
@@ -50,7 +56,8 @@ static void mx25_select(void)
 
 static void mx25_deselect(void)
 {
-    while (SPI1->SR & SPI_SR_BSY) {}
+    uint32_t t = SPI_POLL_TIMEOUT;
+    while ((SPI1->SR & SPI_SR_BSY) && --t) {}
     spi1_flush_rx();
     mx25_cs_high();
 }
@@ -107,14 +114,15 @@ static int mx25_write_enable(void)
     return ((sr & MX25_SR_WEL) != 0U) ? 1 : -1;
 }
 
-static int mx25_wait_ready(uint32_t timeout)
+static int mx25_wait_ready(uint32_t timeout_ms)
 {
     uint8_t sr;
+    uint32_t start = systick_get_ms();
 
-    while (timeout--) {
+    do {
         if (mx25_read_status(&sr) != 1) return -1;
         if ((sr & MX25_SR_WIP) == 0U) return 1;
-    }
+    } while ((systick_get_ms() - start) < timeout_ms);
 
     return -1;
 }
@@ -167,7 +175,7 @@ static int mx25_page_program(uint32_t addr, const uint8_t *src, uint16_t len)
 
     mx25_deselect();
 
-    return mx25_wait_ready(2000000U);
+    return mx25_wait_ready(10U);
 }
 
 int mx25_init(void)
@@ -242,5 +250,5 @@ int mx25_sector_erase_4k(uint32_t addr)
     mx25_send_addr32(addr);
     mx25_deselect();
 
-    return mx25_wait_ready(50000000U);
+    return mx25_wait_ready(500U);
 }

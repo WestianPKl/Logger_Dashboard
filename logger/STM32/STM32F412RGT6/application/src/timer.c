@@ -27,6 +27,80 @@
 #define TIM4_CH3_PIN 8U
 #define TIM4_CH4_PIN 9U
 
+static uint32_t tim_apb1_clock_hz(void)
+{
+    uint32_t pclk1;
+    uint32_t hclk;
+    uint32_t cfgr;
+    uint32_t hpre_bits;
+    uint32_t ppre1_bits;
+    uint32_t ahb_div;
+    uint32_t apb1_div;
+
+    static const uint16_t ahb_presc_table[16] = {
+        1, 1, 1, 1, 1, 1, 1, 1,   // 0xxx
+        2, 4, 8, 16, 64, 128, 256, 512
+    };
+
+    static const uint8_t apb_presc_table[8] = {
+        1, 1, 1, 1, 2, 4, 8, 16
+    };
+
+    cfgr = RCC->CFGR;
+
+    hpre_bits  = (cfgr >> RCC_CFGR_HPRE_Pos)  & 0x0F;
+    ppre1_bits = (cfgr >> RCC_CFGR_PPRE1_Pos) & 0x07;
+
+    ahb_div  = ahb_presc_table[hpre_bits];
+    apb1_div = apb_presc_table[ppre1_bits];
+
+    hclk  = SystemCoreClock / ahb_div;
+    pclk1 = hclk / apb1_div;
+
+    if (apb1_div == 1U) {
+        return pclk1;
+    }
+
+    return pclk1 * 2U;
+}
+
+// static uint32_t tim_apb2_clock_hz(void)
+// {
+//     uint32_t pclk2;
+//     uint32_t hclk;
+//     uint32_t cfgr;
+//     uint32_t hpre_bits;
+//     uint32_t ppre2_bits;
+//     uint32_t ahb_div;
+//     uint32_t apb2_div;
+
+//     static const uint16_t ahb_presc_table[16] = {
+//         1, 1, 1, 1, 1, 1, 1, 1,
+//         2, 4, 8, 16, 64, 128, 256, 512
+//     };
+
+//     static const uint8_t apb_presc_table[8] = {
+//         1, 1, 1, 1, 2, 4, 8, 16
+//     };
+
+//     cfgr = RCC->CFGR;
+
+//     hpre_bits  = (cfgr >> RCC_CFGR_HPRE_Pos)  & 0x0F;
+//     ppre2_bits = (cfgr >> RCC_CFGR_PPRE2_Pos) & 0x07;
+
+//     ahb_div  = ahb_presc_table[hpre_bits];
+//     apb2_div = apb_presc_table[ppre2_bits];
+
+//     hclk  = SystemCoreClock / ahb_div;
+//     pclk2 = hclk / apb2_div;
+
+//     if (apb2_div == 1U) {
+//         return pclk2;
+//     }
+
+//     return pclk2 * 2U;
+// }
+
 void timer1_init(uint32_t prescaler, uint32_t period){
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
     (void)RCC->APB2ENR;
@@ -109,25 +183,38 @@ void timer4_init(uint32_t prescaler, uint32_t period){
 
 void timer13_init_10ms(void)
 {
+    uint32_t timclk;
+    uint32_t psc;
+    uint32_t arr;
+
     RCC->APB1ENR |= RCC_APB1ENR_TIM13EN;
     (void)RCC->APB1ENR;
 
     TIM13->CR1 = 0;
     TIM13->CR2 = 0;
 
-    TIM13->PSC = 84000U - 1U;
-    TIM13->ARR = 10U - 1U;
+    timclk = tim_apb1_clock_hz();
+
+    psc = (timclk / 10000U);
+    if (psc == 0U) {
+        psc = 1U;
+    }
+
+    TIM13->PSC = psc - 1U;
+
+    arr = 100U;
+    TIM13->ARR = arr - 1U;
 
     TIM13->EGR = TIM_EGR_UG;
     TIM13->SR = 0;
-
     TIM13->DIER |= TIM_DIER_UIE;
-    NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
 
+    NVIC_EnableIRQ(TIM8_UP_TIM13_IRQn);
     TIM13->CR1 |= TIM_CR1_CEN;
 }
 
-void timer1_pwm_ch1_init(uint32_t prescaler, uint32_t period){
+void timer1_pwm_ch1_init(uint32_t prescaler, uint32_t period)
+{
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
     (void)RCC->APB2ENR;
 
@@ -144,25 +231,22 @@ void timer1_pwm_ch1_init(uint32_t prescaler, uint32_t period){
     GPIOA->AFR[TIM1_CH1_PIN / 8U] &= ~(0xFU << ((TIM1_CH1_PIN % 8U) * 4U));
     GPIOA->AFR[TIM1_CH1_PIN / 8U] |=  (0x1U << ((TIM1_CH1_PIN % 8U) * 4U));
 
-    TIM1->CCMR1 &= ~(TIM_CCMR1_OC1M_Msk | TIM_CCMR1_OC1PE | TIM_CCMR1_OC2M_Msk | TIM_CCMR1_OC2PE);
+    TIM1->CCMR1 &= ~(TIM_CCMR1_OC1M_Msk | TIM_CCMR1_OC1PE);
+    TIM1->CCMR1 |=  (0x6U << TIM_CCMR1_OC1M_Pos) | TIM_CCMR1_OC1PE;
 
-    TIM1->CCMR1 |= (0x6U << TIM_CCMR1_OC1M_Pos) | TIM_CCMR1_OC1PE | (0x6U << TIM_CCMR1_OC2M_Pos) | TIM_CCMR1_OC2PE;
+    TIM1->CCER &= ~(TIM_CCER_CC1P | TIM_CCER_CC1NP);
+    TIM1->CCER |= TIM_CCER_CC1E;
 
-    TIM1->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E;
+    TIM1->PSC = (prescaler > 0U) ? (prescaler - 1U) : 0U;
+    TIM1->ARR = (period > 0U) ? (period - 1U) : 0U;
 
-    TIM1->PSC = (prescaler > 0) ? (prescaler - 1U) : 0U;
-    TIM1->ARR = (period > 0) ? (period - 1U) : 0U;
-
-    TIM1->CCR1 = 0;
-    TIM1->CCR2 = 0;
-    TIM1->CNT = 0;
+    TIM1->CCR1 = 0U;
+    TIM1->CNT = 0U;
 
     TIM1->CR1 |= TIM_CR1_ARPE;
     TIM1->EGR = TIM_EGR_UG;
-
     TIM1->BDTR |= TIM_BDTR_MOE;
-
-    TIM1->CR1 |= TIM_CR1_CEN; 
+    TIM1->CR1 |= TIM_CR1_CEN;
 }
 
 void timer2_pwm_ch3_init(uint32_t prescaler, uint32_t period){
@@ -410,18 +494,45 @@ void timer4_pwm_ch4_init(uint32_t prescaler, uint32_t period){
     TIM4->CR1 |= TIM_CR1_CEN; 
 }
 
-void timer1_pwm_ch1_set_duty(uint8_t duty_0_255){
-    uint32_t arr = TIM1->ARR;
-    uint32_t ccr = ((uint32_t)duty_0_255 * arr) / 255U;
+void timer1_pwm_ch1_set_duty(uint8_t duty_percent)
+{
+    uint32_t arr;
+    uint32_t ccr;
+
+    if (duty_percent > 100U) {
+        duty_percent = 100U;
+    }
+
+    arr = TIM1->ARR;
+    ccr = ((uint32_t)duty_percent * (arr + 1U)) / 100U;
+
+    if (ccr > arr) {
+        ccr = arr;
+    }
+
     TIM1->CCR1 = ccr;
 }
 
-void timer2_pwm_ch3_set_duty(uint8_t duty_0_255)
+
+void timer2_pwm_ch3_set_duty(uint8_t duty_percent)
 {
-    uint32_t arr = TIM2->ARR;
-    uint32_t ccr = ((uint32_t)duty_0_255 * arr) / 255U;
+    uint32_t arr;
+    uint32_t ccr;
+
+    if (duty_percent > 100U) {
+        duty_percent = 100U;
+    }
+
+    arr = TIM2->ARR;
+    ccr = ((uint32_t)duty_percent * (arr + 1U)) / 100U;
+
+    if (ccr > arr) {
+        ccr = arr;
+    }
+
     TIM2->CCR3 = ccr;
 }
+
 
 void timer3_pwm_ch1_set_duty(int32_t duty){
     if (duty < 0) duty = 0;
@@ -447,17 +558,41 @@ void timer3_pwm_ch4_set_duty(int32_t duty){
     TIM3->CCR4 = (uint32_t)duty;
 }
 
-void timer4_pwm_ch3_set_duty(uint8_t duty_0_255)
+void timer4_pwm_ch3_set_duty(uint8_t duty_percent)
 {
-    uint32_t arr = TIM4->ARR;
-    uint32_t ccr = ((uint32_t)duty_0_255 * arr) / 255U;
+    uint32_t arr;
+    uint32_t ccr;
+
+    if (duty_percent > 100U) {
+        duty_percent = 100U;
+    }
+
+    arr = TIM4->ARR;
+    ccr = ((uint32_t)duty_percent * (arr + 1U)) / 100U;
+
+    if (ccr > arr) {
+        ccr = arr;
+    }
+
     TIM4->CCR3 = ccr;
 }
 
-void timer4_pwm_ch4_set_duty(uint8_t duty_0_255)
+void timer4_pwm_ch4_set_duty(uint8_t duty_percent)
 {
-    uint32_t arr = TIM4->ARR;
-    uint32_t ccr = ((uint32_t)duty_0_255 * arr) / 255U;
+    uint32_t arr;
+    uint32_t ccr;
+
+    if (duty_percent > 100U) {
+        duty_percent = 100U;
+    }
+
+    arr = TIM4->ARR;
+    ccr = ((uint32_t)duty_percent * (arr + 1U)) / 100U;
+
+    if (ccr > arr) {
+        ccr = arr;
+    }
+
     TIM4->CCR4 = ccr;
 }
 
@@ -487,18 +622,21 @@ void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
 
 void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
 {
-    if (freq == 0U || volume == 0U) {
-        timer3_pwm_ch4_set_duty(0);
-        return;
-    }
+    uint32_t timer_clock;
+    uint32_t prescaler = 1U;
+    uint32_t period;
 
     if (volume > 100U) {
         volume = 100U;
     }
 
-    uint32_t timer_clock = 84000000U;
-    uint32_t prescaler = 1U;
-    uint32_t period = timer_clock / freq;
+    if (freq == 0U || volume == 0U) {
+        timer3_pwm_ch4_set_duty(0);
+        return;
+    }
+
+    timer_clock = tim_apb1_clock_hz();
+    period = timer_clock / freq;
 
     while (period > 65535U && prescaler < 65536U) {
         prescaler++;
@@ -511,6 +649,5 @@ void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
 
     timer3_pwm_ch4_init(prescaler, period);
 
-    uint32_t duty = ((period * volume) / 100U) / 2U;
-    timer3_pwm_ch4_set_duty((int32_t)duty);
+    timer3_pwm_ch4_set_duty((uint8_t)volume);
 }

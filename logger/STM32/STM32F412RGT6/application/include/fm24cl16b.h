@@ -16,7 +16,7 @@
 #define FRAM_ADDR_NEXT_SEQUENCE         0x088
 #define FRAM_ADDR_MEASURE_INTERVAL      0x128
 #define FRAM_ADDR_LOG_META_A            0x180u
-#define FRAM_ADDR_LOG_META_B        0x1C0u
+#define FRAM_ADDR_LOG_META_B            0x1C0u
 
 #define FRAM_FLAG_EXT_RTC_PRESENT  (1U << 0)
 #define FRAM_FLAG_FLASH_PRESENT    (1U << 1)
@@ -25,6 +25,7 @@
 #define FRAM_FLAG_BME280_PRESENT   (1U << 4)
 #define FRAM_FLAG_INA226_PRESENT   (1U << 5)
 #define FRAM_FLAG_ADC_PRESENT      (1U << 6)
+#define FRAM_FLAG_CAN_PRESENT      (1U << 7)
 
 #define FM24CL16B_DEV_ADDR(a) \
     (uint8_t)(FM24CL16B_I2C_ADDR_BASE | (((a) >> 8) & 0x07))

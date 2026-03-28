@@ -829,20 +829,25 @@ class Ui_MainWindow(object):
 
         self.gridLayout_4.addWidget(self.adc_measurement_flag, 6, 0, 1, 2)
 
+        self.can_flag = QCheckBox(self.page_2)
+        self.can_flag.setObjectName("can_flag")
+
+        self.gridLayout_4.addWidget(self.can_flag, 7, 0, 1, 2)
+
         self.network_enable_flag = QCheckBox(self.page_2)
         self.network_enable_flag.setObjectName("network_enable_flag")
 
-        self.gridLayout_4.addWidget(self.network_enable_flag, 7, 0, 1, 2)
+        self.gridLayout_4.addWidget(self.network_enable_flag, 8, 0, 1, 2)
 
         self.save_flags_button = QPushButton(self.page_2)
         self.save_flags_button.setObjectName("save_flags_button")
 
-        self.gridLayout_4.addWidget(self.save_flags_button, 8, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.save_flags_button, 9, 0, 1, 1)
 
         self.restore_flags_button = QPushButton(self.page_2)
         self.restore_flags_button.setObjectName("restore_flags_button")
 
-        self.gridLayout_4.addWidget(self.restore_flags_button, 8, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.restore_flags_button, 9, 1, 1, 1)
 
         self.tool_box.addItem(self.page_2, "Flags")
 
@@ -861,6 +866,79 @@ class Ui_MainWindow(object):
         self.clear_log_button.setObjectName("clear_log_button")
         self.clear_log_button.setGeometry(QRect(433, 350, 78, 26))
         self.tabWidget.addTab(self.tab_2, "")
+        self.tab_service = QWidget()
+        self.tab_service.setObjectName("tab_service")
+
+        self.service_login_label = QLabel(self.tab_service)
+        self.service_login_label.setObjectName("service_login_label")
+        self.service_login_label.setGeometry(QRect(11, 11, 200, 21))
+        self.service_login_label.setFont(font)
+
+        self.service_username_label = QLabel(self.tab_service)
+        self.service_username_label.setObjectName("service_username_label")
+        self.service_username_label.setGeometry(QRect(11, 40, 80, 26))
+
+        self.service_username_input = QLineEdit(self.tab_service)
+        self.service_username_input.setObjectName("service_username_input")
+        self.service_username_input.setGeometry(QRect(95, 40, 200, 26))
+
+        self.service_password_label = QLabel(self.tab_service)
+        self.service_password_label.setObjectName("service_password_label")
+        self.service_password_label.setGeometry(QRect(11, 72, 80, 26))
+
+        self.service_password_input = QLineEdit(self.tab_service)
+        self.service_password_input.setObjectName("service_password_input")
+        self.service_password_input.setGeometry(QRect(95, 72, 200, 26))
+        self.service_password_input.setEchoMode(QLineEdit.EchoMode.Password)
+
+        self.service_login_button = QPushButton(self.tab_service)
+        self.service_login_button.setObjectName("service_login_button")
+        self.service_login_button.setGeometry(QRect(305, 40, 90, 26))
+
+        self.service_logout_button = QPushButton(self.tab_service)
+        self.service_logout_button.setObjectName("service_logout_button")
+        self.service_logout_button.setGeometry(QRect(305, 72, 90, 26))
+
+        self.service_status_label = QLabel(self.tab_service)
+        self.service_status_label.setObjectName("service_status_label")
+        self.service_status_label.setGeometry(QRect(405, 40, 120, 26))
+
+        self.line_service = QFrame(self.tab_service)
+        self.line_service.setObjectName("line_service")
+        self.line_service.setGeometry(QRect(0, 105, 531, 16))
+        self.line_service.setFrameShape(QFrame.Shape.HLine)
+        self.line_service.setFrameShadow(QFrame.Shadow.Sunken)
+
+        self.keygen_label = QLabel(self.tab_service)
+        self.keygen_label.setObjectName("keygen_label")
+        self.keygen_label.setGeometry(QRect(11, 120, 200, 21))
+        self.keygen_label.setFont(font)
+
+        self.keygen_date_label = QLabel(self.tab_service)
+        self.keygen_date_label.setObjectName("keygen_date_label")
+        self.keygen_date_label.setGeometry(QRect(11, 150, 80, 26))
+
+        self.keygen_date_input = QLineEdit(self.tab_service)
+        self.keygen_date_input.setObjectName("keygen_date_input")
+        self.keygen_date_input.setGeometry(QRect(95, 150, 200, 26))
+        self.keygen_date_input.setEnabled(False)
+
+        self.keygen_generate_button = QPushButton(self.tab_service)
+        self.keygen_generate_button.setObjectName("keygen_generate_button")
+        self.keygen_generate_button.setGeometry(QRect(305, 150, 90, 26))
+        self.keygen_generate_button.setEnabled(False)
+
+        self.keygen_result_label = QLabel(self.tab_service)
+        self.keygen_result_label.setObjectName("keygen_result_label")
+        self.keygen_result_label.setGeometry(QRect(11, 185, 80, 26))
+
+        self.keygen_result_output = QLineEdit(self.tab_service)
+        self.keygen_result_output.setObjectName("keygen_result_output")
+        self.keygen_result_output.setGeometry(QRect(95, 185, 200, 26))
+        self.keygen_result_output.setReadOnly(True)
+        self.keygen_result_output.setEnabled(False)
+
+        self.tabWidget.addTab(self.tab_service, "")
 
         self.gridLayout_3.addWidget(self.tabWidget, 0, 0, 1, 1)
 
@@ -1092,6 +1170,7 @@ class Ui_MainWindow(object):
         self.adc_measurement_flag.setText(
             QCoreApplication.translate("MainWindow", "ADC measurement", None)
         )
+        self.can_flag.setText(QCoreApplication.translate("MainWindow", "CAN", None))
         self.network_enable_flag.setText(
             QCoreApplication.translate("MainWindow", "Network enabled", None)
         )
@@ -1118,4 +1197,41 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(
             self.tabWidget.indexOf(self.tab_2),
             QCoreApplication.translate("MainWindow", "Logs", None),
+        )
+        self.service_login_label.setText(
+            QCoreApplication.translate("MainWindow", "Service Login", None)
+        )
+        self.service_username_label.setText(
+            QCoreApplication.translate("MainWindow", "Username", None)
+        )
+        self.service_password_label.setText(
+            QCoreApplication.translate("MainWindow", "Password", None)
+        )
+        self.service_login_button.setText(
+            QCoreApplication.translate("MainWindow", "Login", None)
+        )
+        self.service_logout_button.setText(
+            QCoreApplication.translate("MainWindow", "Logout", None)
+        )
+        self.service_status_label.setText(
+            QCoreApplication.translate("MainWindow", "Not logged in", None)
+        )
+        self.keygen_label.setText(
+            QCoreApplication.translate("MainWindow", "Key Generator", None)
+        )
+        self.keygen_date_label.setText(
+            QCoreApplication.translate("MainWindow", "Date", None)
+        )
+        self.keygen_date_input.setPlaceholderText(
+            QCoreApplication.translate("MainWindow", "YYYY-MM-DD", None)
+        )
+        self.keygen_generate_button.setText(
+            QCoreApplication.translate("MainWindow", "Generate", None)
+        )
+        self.keygen_result_label.setText(
+            QCoreApplication.translate("MainWindow", "Key", None)
+        )
+        self.tabWidget.setTabText(
+            self.tabWidget.indexOf(self.tab_service),
+            QCoreApplication.translate("MainWindow", "Service", None),
         )

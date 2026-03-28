@@ -31,6 +31,7 @@ extern volatile uint8_t sht40_present;
 extern volatile uint8_t bme280_present;
 extern volatile uint8_t ina226_present;
 extern volatile uint8_t adc_present;
+extern volatile uint8_t can_present;
 extern volatile uint8_t adc_was_present;
 
 extern volatile uint8_t mcp7940n_mfp_flag;
@@ -60,6 +61,9 @@ extern uint8_t rgb_brightness;
 extern volatile uint8_t backlight_on;
 extern volatile uint8_t backlight_toggle_flag;
 extern volatile uint8_t backlight_timer;
+
+extern volatile uint8_t sht40_error_flag;
+extern volatile uint8_t bme280_error_flag;
 
 extern measurement_sht40_t measurement_sht40;
 extern measurement_bme280_t measurement_bme280;

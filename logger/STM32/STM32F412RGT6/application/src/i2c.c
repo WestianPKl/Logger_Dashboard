@@ -5,17 +5,23 @@
 #define I2C1_SCL_PIN 6U
 #define I2C1_SDA_PIN 7U
 
-#define PERIPH_CLK_HZ 16U
-#define I2C_100KHZ    80U
-#define SD_MODE_MAX_RISE_TIME 17U
-#define I2C_TIMEOUT   1000U
+// #define PERIPH_CLK_HZ 16U
+// #define I2C_100KHZ    80U
+// #define SD_MODE_MAX_RISE_TIME 17U
+#define PERIPH_CLK_HZ       42U
+#define I2C_100KHZ          210U
+#define SD_MODE_MAX_RISE_TIME 43U
+// #define I2C_TIMEOUT   1000U
 
 extern volatile uint8_t i2c1_dma_tx_done;
 extern volatile uint8_t i2c1_dma_rx_done;
 extern volatile uint8_t i2c1_dma_err;
 
 #define I2C_FAIL() do { I2C1->CR1 |= I2C_CR1_STOP; i2c1_recover(); return -1; } while(0)
-#define I2C_DMA_TIMEOUT  2000U
+// #define I2C_DMA_TIMEOUT  2000U
+
+#define I2C_TIMEOUT      100000U
+#define I2C_DMA_TIMEOUT  200000U
 
 static int i2c1_check_error_and_clear(void)
 {

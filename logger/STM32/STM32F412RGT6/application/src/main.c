@@ -24,6 +24,8 @@
 #include "uart_protocol.h"
 #include "app_flags.h"
 #include "flash_log.h"
+#include "can.h"
+#include "can_protocol.h"
 
 void btn1_handler(void);
 void btn2_handler(void);
@@ -31,17 +33,16 @@ void btn2_handler(void);
 volatile uint32_t tick_10ms = 0;
 volatile uint8_t lcd_reinit_5s_flag = 0;
 static uint16_t tick_10ms_5s = 0;
+volatile uint16_t app_seconds_10min_cnt = 0;
+
 volatile uint8_t esp32_on = 0;
 volatile uint8_t esp32_toggle_flag = 0;
 volatile uint16_t esp32_timer = 0;
 volatile uint8_t lcd_refresh_flag = 0;
-volatile uint8_t measure_flag_1s = 1;
+volatile uint8_t measure_flag_1s = 0;
+volatile uint8_t can_100ms_flag = 0;
 volatile uint8_t measure_flag_10min = 0;
-volatile uint8_t sht40_error_flag = 0;
-volatile uint8_t bme280_error_flag = 0;
 volatile uint8_t second_marker = 0;
-
-static uint16_t timer_10min_cnt = 0;
 
 volatile uint8_t i2c1_dma_tx_done = 0;
 volatile uint8_t i2c1_dma_rx_done = 0;
@@ -50,9 +51,64 @@ volatile uint8_t i2c1_dma_err     = 0;
 volatile uint8_t spi1_dma_rx_done = 0;
 volatile uint8_t spi1_dma_tx_done = 0;
 
+static void app_second_tick(void)
+{
+    measure_flag_1s = 1;
+    lcd_refresh_flag = 1;
+
+    app_seconds_10min_cnt++;
+    if (app_seconds_10min_cnt >= 600U) {
+        app_seconds_10min_cnt = 0;
+        measure_flag_10min = 1;
+    }
+}
+
+static void clock_init_84mhz_from_hsi(void)
+{
+    RCC->CR |= RCC_CR_HSION;
+    while ((RCC->CR & RCC_CR_HSIRDY) == 0U) {}
+
+    RCC->CFGR &= ~RCC_CFGR_SW;
+    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_HSI) {}
+
+    RCC->CR &= ~RCC_CR_PLLON;
+    while (RCC->CR & RCC_CR_PLLRDY) {}
+
+    RCC->PLLCFGR =
+        (16U << RCC_PLLCFGR_PLLM_Pos) |
+        (168U << RCC_PLLCFGR_PLLN_Pos) |
+        (0U << RCC_PLLCFGR_PLLP_Pos) |
+        (4U << RCC_PLLCFGR_PLLQ_Pos) |
+        RCC_PLLCFGR_PLLSRC_HSI;
+
+    RCC->CFGR &= ~(RCC_CFGR_HPRE | RCC_CFGR_PPRE1 | RCC_CFGR_PPRE2);
+    RCC->CFGR |= RCC_CFGR_HPRE_DIV1;
+    RCC->CFGR |= RCC_CFGR_PPRE1_DIV2;
+    RCC->CFGR |= RCC_CFGR_PPRE2_DIV1;
+
+    FLASH->ACR =
+        FLASH_ACR_ICEN |
+        FLASH_ACR_DCEN |
+        FLASH_ACR_PRFTEN |
+        FLASH_ACR_LATENCY_2WS;
+
+    RCC->CR |= RCC_CR_PLLON;
+    while ((RCC->CR & RCC_CR_PLLRDY) == 0U) {}
+
+    RCC->CFGR &= ~RCC_CFGR_SW;
+    RCC->CFGR |= RCC_CFGR_SW_PLL;
+    while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {}
+
+    SystemCoreClock = 84000000U;
+}
+
 int main(void)
 {
     __disable_irq();
+
+    clock_init_84mhz_from_hsi();
+
+    systick_init();
 
     SCB->VTOR = 0x08008000U;
     __DSB(); __ISB();
@@ -95,12 +151,13 @@ int main(void)
     uint8_t cfg_flags = 0;
     if (fm24cl16b_read_byte(FRAM_ADDR_FLAGS, &cfg_flags) == 1) {
         ext_rtc_present = (cfg_flags & FRAM_FLAG_EXT_RTC_PRESENT) ? 1U : 0U;
-        flash_present   = (cfg_flags & FRAM_FLAG_FLASH_PRESENT)   ? 1U : 0U;
+        flash_present  = (cfg_flags & FRAM_FLAG_FLASH_PRESENT)   ? 1U : 0U;
         display_present = (cfg_flags & FRAM_FLAG_DISPLAY_PRESENT) ? 1U : 0U;
-        sht40_present   = (cfg_flags & FRAM_FLAG_SHT40_PRESENT)   ? 1U : 0U;
-        bme280_present  = (cfg_flags & FRAM_FLAG_BME280_PRESENT)  ? 1U : 0U;
-        ina226_present  = (cfg_flags & FRAM_FLAG_INA226_PRESENT)  ? 1U : 0U;
-        adc_present    = (cfg_flags & FRAM_FLAG_ADC_PRESENT)      ? 1U : 0U;
+        sht40_present  = (cfg_flags & FRAM_FLAG_SHT40_PRESENT)   ? 1U : 0U;
+        bme280_present = (cfg_flags & FRAM_FLAG_BME280_PRESENT)  ? 1U : 0U;
+        ina226_present = (cfg_flags & FRAM_FLAG_INA226_PRESENT)  ? 1U : 0U;
+        adc_present = (cfg_flags & FRAM_FLAG_ADC_PRESENT)      ? 1U : 0U;
+        can_present = (cfg_flags & FRAM_FLAG_CAN_PRESENT)      ? 1U : 0U;
     } else {
         ext_rtc_present = 0U;
         flash_present   = 0U;
@@ -108,10 +165,11 @@ int main(void)
         sht40_present   = 0U;
         bme280_present  = 0U;
         ina226_present  = 0U;
-        adc_present     = 0U;
+        adc_present = 0U;
+        can_present = 0U;
     }
 
-    if (adc_present){
+    if (adc_present) {
         adc1_init(1, adc_data_buffer, ADC_BUFFER_SIZE);
         adc1_start_conversion();
         adc_was_present = 1;
@@ -132,10 +190,19 @@ int main(void)
     }
 
     if (ext_rtc_present) {
-        mcp7940n_init(1);
+        if (mcp7940n_init(1) == 1 && mcp7940n_mfp_sqw_1hz() == 1) {
+        } else {
+            ext_rtc_present = 0;
+            rtc_init();
+        }
     } else {
         rtc_init();
     }
+
+    app_seconds_10min_cnt = 0;
+    measure_flag_1s = 0;
+    lcd_refresh_flag = 0;
+    measure_flag_10min = 0;
 
     if (flash_present) {
         if (flash_log_init() != 1) {
@@ -147,6 +214,13 @@ int main(void)
         ina226_init(0x40, 500, 2000);
     }
 
+    if (can_present) {
+        can_gpio_init();
+        can_params_init(CAN_MODE_NORMAL);
+        can_filter_config(0x345);
+        can_start();
+    }
+
     __enable_irq();
 
     esp32_reset();
@@ -154,6 +228,7 @@ int main(void)
     if (bme280_present) {
         bme280_init();
     }
+    
 
     while (1) {
         if (btn1_pressed) { btn1_pressed = 0; btn1_handler(); }
@@ -164,12 +239,13 @@ int main(void)
             uint8_t cfg_flags_local = 0;
             if (fm24cl16b_read_byte(FRAM_ADDR_FLAGS, &cfg_flags_local) == 1) {
                 ext_rtc_present = (cfg_flags_local & FRAM_FLAG_EXT_RTC_PRESENT) ? 1U : 0U;
-                flash_present   = (cfg_flags_local & FRAM_FLAG_FLASH_PRESENT)   ? 1U : 0U;
+                flash_present = (cfg_flags_local & FRAM_FLAG_FLASH_PRESENT)   ? 1U : 0U;
                 display_present = (cfg_flags_local & FRAM_FLAG_DISPLAY_PRESENT) ? 1U : 0U;
-                sht40_present   = (cfg_flags_local & FRAM_FLAG_SHT40_PRESENT)   ? 1U : 0U;
-                bme280_present  = (cfg_flags_local & FRAM_FLAG_BME280_PRESENT)  ? 1U : 0U;
-                ina226_present  = (cfg_flags_local & FRAM_FLAG_INA226_PRESENT)  ? 1U : 0U;
-                adc_present     = (cfg_flags_local & FRAM_FLAG_ADC_PRESENT)      ? 1U : 0U;
+                sht40_present  = (cfg_flags_local & FRAM_FLAG_SHT40_PRESENT)   ? 1U : 0U;
+                bme280_present = (cfg_flags_local & FRAM_FLAG_BME280_PRESENT)  ? 1U : 0U;
+                ina226_present = (cfg_flags_local & FRAM_FLAG_INA226_PRESENT)  ? 1U : 0U;
+                adc_present = (cfg_flags_local & FRAM_FLAG_ADC_PRESENT)      ? 1U : 0U;
+                can_present = (cfg_flags_local & FRAM_FLAG_CAN_PRESENT)      ? 1U : 0U;
             }
 
             if (adc_present && !adc_was_present) {
@@ -187,17 +263,27 @@ int main(void)
                 backlight_timer = 0;
                 backlight_toggle_flag = 1;
             } else {
-                if (lcd_is_present()) {
+                if (lcd_is_present()) 
+                {
                     lcd_clear();
                     lcd_backlight(0);
                 }
             }
 
             if (ext_rtc_present) {
-                mcp7940n_init(1);
+                if (mcp7940n_init(1) == 1 && mcp7940n_mfp_sqw_1hz() == 1) {
+                } else {
+                    ext_rtc_present = 0;
+                    rtc_init();
+                }
             } else {
                 rtc_init();
             }
+
+            app_seconds_10min_cnt = 0;
+            measure_flag_1s = 0;
+            lcd_refresh_flag = 0;
+            measure_flag_10min = 0;
 
             if (flash_present) {
                 if (flash_log_init() != 1) {
@@ -209,6 +295,13 @@ int main(void)
                 ina226_init(0x40, 500, 2000);
             }
 
+            if (can_present) {
+                can_gpio_init();
+                can_params_init(CAN_MODE_NORMAL);
+                can_filter_config(0x345);
+                can_start();
+            }
+
             if (bme280_present) {
                 bme280_init();
             }
@@ -216,6 +309,12 @@ int main(void)
 
         uart2_process_rx();
         uart1_process_rx();
+
+        if (can_100ms_flag) {
+            can_100ms_flag = 0;
+            send_cyclic_frames();
+        }
+
 
         if (measure_flag_1s) {
             measure_flag_1s = 0;
@@ -380,6 +479,10 @@ int main(void)
                 }
             }
         }
+
+        if (can_rx_ready) {
+            can_rx_ready = 0;
+        }
     }
 }
 
@@ -470,18 +573,23 @@ void TIM8_UP_TIM13_IRQHandler(void)
 
         tick_10ms++;
         tick_10ms_5s++;
+
+        if ((tick_10ms % 10U) == 0U) {
+            can_100ms_flag = 1;
+        }
+
         if (tick_10ms_5s >= 500U) {
             tick_10ms_5s = 0;
             lcd_reinit_5s_flag = 1;
         }
 
         if ((tick_10ms % 100U) == 0U) {
-            measure_flag_1s = 1;
-            lcd_refresh_flag = 1;
+            if (!ext_rtc_present) {
+                app_second_tick();
+            }
 
             if (backlight_on && display_present) {
                 backlight_timer++;
-
                 if (backlight_timer >= 20U) {
                     backlight_on = 0;
                     backlight_timer = 0;
@@ -501,12 +609,6 @@ void TIM8_UP_TIM13_IRQHandler(void)
                     esp32_status_set(0);
                 }
             }
-        }
-
-        timer_10min_cnt++;
-        if (timer_10min_cnt >= 60000U) {
-            timer_10min_cnt = 0;
-            measure_flag_10min = 1;
         }
     }
 }
@@ -567,6 +669,31 @@ void EXTI9_5_IRQHandler(void)
 {
     if (EXTI->PR & (1U << 5)) {
         EXTI->PR = (1U << 5);
-        mcp7940n_mfp_flag = 1;
+
+        if (ext_rtc_present) {
+            app_second_tick();
+        }
+    }
+}
+
+void CAN1_RX0_IRQHandler(void)
+{
+    if (CAN1->RF0R & CAN_RF0R_FOVR0) {
+        CAN1->RF0R = CAN_RF0R_FOVR0;
+    }
+
+    while (CAN1->RF0R & CAN_RF0R_FMP0) {
+        can_rx_header_typedef hdr;
+        uint8_t data[8];
+
+        if (can_get_rx_message(CAN_RX_FIFO0, &hdr, data) == 0U) {
+            can_rx_header_last = hdr;
+            for (uint8_t i = 0; i < 8; i++) {
+                can_rx_data_last[i] = data[i];
+            }
+            can_rx_ready = 1;
+        } else {
+            break;
+        }
     }
 }

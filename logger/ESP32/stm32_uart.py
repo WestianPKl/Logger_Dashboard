@@ -223,8 +223,8 @@ class STM32UART:
     def req_output_states(self):
         p = self._send_cmd(0x04, 0x00)
         if not p:
-            return [0, 0, 0, 0, 0]
-        return [p[0], p[1], p[2], p[3], p[4]]
+            return [0, 0, 0, 0, 0, 0]
+        return [p[0], p[1], p[2], p[3], p[4], p[5]]
 
     def req_set_output(self, channel: int, on: int):
         p = self._send_cmd(0x04, channel, bytes([on & 0xFF]))
@@ -245,7 +245,12 @@ class STM32UART:
     def req_set_buzzer(self, freq: int, volume: int):
         pl = bytes([(freq >> 8) & 0xFF, freq & 0xFF, volume & 0xFF])
         p = self._send_cmd(0x05, 0x06, pl)
-        return self.u16_from_be(p, 0) if p else 0
+        if not p:
+            return None
+        return {
+            "freq": self.u16_from_be(p, 0),
+            "volume": p[2],
+        }
 
     def req_rtc_read(self):
         p = self._send_cmd(0x06, 0x00)
@@ -339,6 +344,7 @@ class STM32UART:
             "FRAM_FLAG_BME280_PRESENT": 1 if p and (p[0] & (1 << 4)) else 0,
             "FRAM_FLAG_INA226_PRESENT": 1 if p and (p[0] & (1 << 5)) else 0,
             "FRAM_FLAG_ADC_PRESENT": 1 if p and (p[0] & (1 << 6)) else 0,
+            "FRAM_FLAG_CAN_PRESENT": 1 if p and (p[0] & (1 << 7)) else 0,
         }
         return flags
 

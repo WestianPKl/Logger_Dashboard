@@ -18,4 +18,4 @@ class ConfigInformation:
     ICON_FILE = ICONS_DIR / "icon.png"
     DATA_DIR = Path(__file__).parent.parent / "data"
     CONFIG_FILE = DATA_DIR / "config.cfg"
-    DATABASE_FILE = DATA_DIR / "db.sql"
+    DATABASE_FILE = DATA_DIR / "database.db"

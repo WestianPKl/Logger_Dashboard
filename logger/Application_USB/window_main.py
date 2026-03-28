@@ -674,22 +674,27 @@ class Ui_MainWindow(object):
         self.adc_measurement_flag = QCheckBox(self.page_2)
         self.adc_measurement_flag.setObjectName(u"adc_measurement_flag")
 
+        self.can_flag = QCheckBox(self.page_2)
+        self.can_flag.setObjectName(u"can_flag")
+
         self.gridLayout_4.addWidget(self.adc_measurement_flag, 6, 0, 1, 2)
+
+        self.gridLayout_4.addWidget(self.can_flag, 7, 0, 1, 2)
 
         self.network_enable_flag = QCheckBox(self.page_2)
         self.network_enable_flag.setObjectName(u"network_enable_flag")
 
-        self.gridLayout_4.addWidget(self.network_enable_flag, 7, 0, 1, 2)
+        self.gridLayout_4.addWidget(self.network_enable_flag, 8, 0, 1, 2)
 
         self.save_flags_button = QPushButton(self.page_2)
         self.save_flags_button.setObjectName(u"save_flags_button")
 
-        self.gridLayout_4.addWidget(self.save_flags_button, 8, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.save_flags_button, 9, 0, 1, 1)
 
         self.restore_flags_button = QPushButton(self.page_2)
         self.restore_flags_button.setObjectName(u"restore_flags_button")
 
-        self.gridLayout_4.addWidget(self.restore_flags_button, 8, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.restore_flags_button, 9, 1, 1, 1)
 
         self.tool_box.addItem(self.page_2, u"Flags")
 
@@ -838,6 +843,7 @@ class Ui_MainWindow(object):
         self.bme_sensor_flag.setText(QCoreApplication.translate("MainWindow", u"BME280 sensor", None))
         self.ina226_flag.setText(QCoreApplication.translate("MainWindow", u"INA226", None))
         self.adc_measurement_flag.setText(QCoreApplication.translate("MainWindow", u"ADC measurement", None))
+        self.can_flag.setText(QCoreApplication.translate("MainWindow", u"CAN", None))
         self.network_enable_flag.setText(QCoreApplication.translate("MainWindow", u"Network enabled", None))
         self.save_flags_button.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.restore_flags_button.setText(QCoreApplication.translate("MainWindow", u"Restore", None))

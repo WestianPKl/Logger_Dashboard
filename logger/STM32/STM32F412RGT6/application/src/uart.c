@@ -16,7 +16,8 @@
 static uint32_t get_pclk1_hz(void)
 {
     uint32_t hclk = SystemCoreClock;
-    uint32_t ppre1 = (RCC->CFGR >> 8) & 0x7;
+    // uint32_t ppre1 = (RCC->CFGR >> 8) & 0x7;
+    uint32_t ppre1 = (RCC->CFGR >> 10) & 0x7;
     uint32_t div = 1;
     if (ppre1 >= 4) {
         div = 1U << (ppre1 - 3U);
@@ -27,7 +28,8 @@ static uint32_t get_pclk1_hz(void)
 static uint32_t get_pclk2_hz(void)
 {
     uint32_t hclk = SystemCoreClock;
-    uint32_t ppre2 = (RCC->CFGR >> 11) & 0x7;
+    // uint32_t ppre2 = (RCC->CFGR >> 11) & 0x7;
+    uint32_t ppre2 = (RCC->CFGR >> 13) & 0x7;
     uint32_t div = 1;
     if (ppre2 >= 4) {
         div = 1U << (ppre2 - 3U);

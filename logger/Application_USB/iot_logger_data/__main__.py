@@ -1,15 +1,24 @@
 import ast
-from datetime import datetime
+import hashlib
+import os
+from datetime import date, datetime
 from pathlib import Path
 from PySide6.QtCore import QStringListModel, QTimer, Signal, Qt
 from PySide6.QtGui import QIcon, QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QApplication, QMainWindow, QFileDialog, QProgressBar
+from PySide6.QtWidgets import (
+    QApplication,
+    QMainWindow,
+    QFileDialog,
+    QProgressBar,
+    QMessageBox,
+)
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qtagg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 from .ui.window import Ui_MainWindow
 from .device.device_manager import DeviceManager
 from .config.config import ConfigInformation
+from .config.database import DatabaseConnection
 from serial.tools import list_ports
 from typing import Callable, Optional
 
@@ -100,7 +109,7 @@ class IoTLoggerApp(QMainWindow):
         self._startup_timer.setInterval(50)
         self._startup_timer.timeout.connect(self._send_next_startup_cmd)
 
-        self._sig_log.connect(lambda msg: self.log_message(msg))
+        self._sig_log.connect(self._on_device_log)
         self._sig_error.connect(lambda msg: self.log_message(msg, level="ERROR"))
         self._sig_data.connect(self._on_data_received)
         self._sig_connect.connect(self._on_connected_ui)
@@ -126,15 +135,30 @@ class IoTLoggerApp(QMainWindow):
         self._log_index = 0
         self._log_reading = False
 
+        self._log_timeout_timer = QTimer(self)
+        self._log_timeout_timer.setSingleShot(True)
+        self._log_timeout_timer.setInterval(3000)
+        self._log_timeout_timer.timeout.connect(self._on_log_timeout)
+
         self._figure = Figure(figsize=(5, 4), tight_layout=True)
         self._canvas = FigureCanvas(self._figure)
         self._nav_toolbar = NavigationToolbar(self._canvas, self)
         self.ui.chart_layout.addWidget(self._nav_toolbar)
         self.ui.chart_layout.addWidget(self._canvas)
 
+        self._service_logged_in = False
+        self._load_env()
+
         self.connect_signals()
         self.load_ports()
         self._set_connected_state(False)
+        self._set_service_logged_in(False)
+        self._check_first_user()
+
+    def _on_device_log(self, msg: str):
+        if self._log_reading and ("READ_LOG" in msg or "TX >" in msg or "RX <" in msg):
+            return
+        self.log_message(msg)
 
     def _on_data_received(self, data: str):
         self._handle_response(data)
@@ -196,6 +220,10 @@ class IoTLoggerApp(QMainWindow):
         self.ui.export_logs_button.clicked.connect(self.on_export_logs_csv)
         self.ui.clear_logs_table_button.clicked.connect(self.on_clear_logs_table)
 
+        self.ui.service_login_button.clicked.connect(self.on_service_login)
+        self.ui.service_logout_button.clicked.connect(self.on_service_logout)
+        self.ui.keygen_generate_button.clicked.connect(self.on_keygen_generate)
+
     def _update_color_preview(self):
         r = self.ui.set_red_slider.value()
         g = self.ui.set_green_slider.value()
@@ -223,7 +251,8 @@ class IoTLoggerApp(QMainWindow):
 
     def _handle_response(self, data: str):
         try:
-            self.log_message(f"Received: {data}")
+            if not self._log_reading:
+                self.log_message(f"Received: {data}")
             if data.startswith("OK:"):
                 payload = data[3:]
                 comma_idx = payload.find(",")
@@ -289,9 +318,16 @@ class IoTLoggerApp(QMainWindow):
 
             elif data.startswith("ERR:"):
                 self.log_message(f"Device error: {data[4:]}", level="ERROR")
+                if self._log_reading:
+                    self._log_index += 1
+                    self.ui.data_logs_progress.setValue(self._log_index)
+                    self._request_next_log()
 
         except Exception as e:
             self.log_message(f"Response parse error: {e}", level="ERROR")
+            if self._log_reading:
+                self._log_index += 1
+                self._request_next_log()
 
     _FLAG_MAP = [
         ("ext_rtc_flag", "FRAM_FLAG_EXT_RTC_PRESENT"),
@@ -301,6 +337,7 @@ class IoTLoggerApp(QMainWindow):
         ("bme_sensor_flag", "FRAM_FLAG_BME280_PRESENT"),
         ("ina226_flag", "FRAM_FLAG_INA226_PRESENT"),
         ("adc_measurement_flag", "FRAM_FLAG_ADC_PRESENT"),
+        ("can_flag", "FRAM_FLAG_CAN_PRESENT"),
         ("network_enable_flag", "WIFI_ENABLED"),
     ]
 
@@ -355,7 +392,10 @@ class IoTLoggerApp(QMainWindow):
 
     def _send(self, command: str, *args):
         if self.device_manager.is_connected:
-            self.log_message(f"Sending command: {command} {' '.join(map(str, args))}")
+            if not self._log_reading or command != "READ_LOG":
+                self.log_message(
+                    f"Sending command: {command} {' '.join(map(str, args))}"
+                )
             self.device_manager.send_command(command, *args)
         else:
             self.log_message("Not connected. Connect first.")
@@ -413,6 +453,7 @@ class IoTLoggerApp(QMainWindow):
         self.log_entries.clear()
         self.log_model.setStringList(self.log_entries)
         self.log_message("Log cleared")
+        self._set_service_controls_enabled(False)
 
     def _on_set_output(self, value: int):
         ch = self.ui.select_output_box.currentText()
@@ -495,6 +536,7 @@ class IoTLoggerApp(QMainWindow):
         "bme_sensor_flag",
         "ina226_flag",
         "adc_measurement_flag",
+        "can_flag",
     ]
 
     def on_save_flags(self):
@@ -536,15 +578,29 @@ class IoTLoggerApp(QMainWindow):
 
     def _request_next_log(self):
         if self._log_index < self._log_total:
+            self._log_timeout_timer.start()
             self._send("READ_LOG", self._log_index, 0)
         else:
+            self._log_timeout_timer.stop()
             self._log_reading = False
             self.ui.data_logs_progress.hide()
             self.ui.read_all_logs_button.setEnabled(True)
             self.log_message(f"All {self._log_total} logs loaded.")
             self._update_chart()
 
+    def _on_log_timeout(self):
+        if not self._log_reading:
+            return
+        self.log_message(
+            f"Log read timeout at index {self._log_index}, skipping.",
+            level="ERROR",
+        )
+        self._log_index += 1
+        self.ui.data_logs_progress.setValue(self._log_index)
+        self._request_next_log()
+
     def _on_log_entry_received(self, rest: str):
+        self._log_timeout_timer.stop()
         try:
             entry = ast.literal_eval(rest)
             dt = entry.get("datetime", {})
@@ -733,6 +789,141 @@ class IoTLoggerApp(QMainWindow):
         except Exception:
             pass
         super().closeEvent(event)
+
+    def _load_env(self):
+        env_path = Path(__file__).parent.parent / ".env"
+        self._env_secret = ""
+        if env_path.exists():
+            for line in env_path.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line.startswith("SECRET"):
+                    _, _, val = line.partition("=")
+                    self._env_secret = val.strip().strip('"').strip("'")
+
+    def _generate_daily_password(self, day=None):
+        if day is None:
+            day = date.today()
+        ymd = day.strftime("%Y%m%d")
+        raw = f"{self._env_secret}:{ymd}"
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest().upper()[:10]
+
+    def on_keygen_generate(self):
+        text = self.ui.keygen_date_input.text().strip()
+        try:
+            day = datetime.strptime(text, "%Y-%m-%d").date() if text else date.today()
+        except ValueError:
+            self.log_message("Invalid date format. Use YYYY-MM-DD.", level="ERROR")
+            return
+        key = self._generate_daily_password(day)
+        self.ui.keygen_result_output.setText(key)
+        self.log_message(f"Key generated for {day}")
+
+    def _check_first_user(self):
+        try:
+            if not DatabaseConnection.has_users():
+                QMessageBox.information(
+                    self,
+                    "First Run",
+                    "No service users found. Please create the first user in the Service tab.",
+                )
+                self.ui.tabWidget.setCurrentWidget(self.ui.tab_service)
+        except Exception as e:
+            self.log_message(f"Database error: {e}", level="ERROR")
+
+    def on_service_login(self):
+        username = self.ui.service_username_input.text().strip()
+        password = self.ui.service_password_input.text().strip()
+        if not username or not password:
+            self.log_message("Enter username and password.")
+            return
+
+        try:
+            if not DatabaseConnection.has_users():
+                DatabaseConnection.create_user(username, password)
+                self.log_message(f"User '{username}' created.")
+                self._set_service_logged_in(True)
+                return
+
+            if DatabaseConnection.verify_user(username, password):
+                self.log_message(f"User '{username}' logged in.")
+                self._set_service_logged_in(True)
+            else:
+                self.log_message("Invalid credentials.", level="ERROR")
+        except Exception as e:
+            self.log_message(f"Login error: {e}", level="ERROR")
+        finally:
+            self.ui.service_password_input.clear()
+
+    def on_service_logout(self):
+        self._set_service_logged_in(False)
+        self.ui.service_username_input.clear()
+        self.ui.keygen_date_input.clear()
+        self.ui.keygen_result_output.clear()
+        self.log_message("Service logout.")
+
+    def _set_service_logged_in(self, logged_in: bool):
+        self._service_logged_in = logged_in
+
+        self.ui.service_status_label.setText(
+            "Logged in" if logged_in else "Not logged in"
+        )
+        self.ui.service_login_button.setEnabled(not logged_in)
+        self.ui.service_username_input.setEnabled(not logged_in)
+        self.ui.service_password_input.setEnabled(not logged_in)
+        self.ui.service_logout_button.setEnabled(logged_in)
+
+        self.ui.keygen_date_input.setEnabled(logged_in)
+        self.ui.keygen_generate_button.setEnabled(logged_in)
+        self.ui.keygen_result_output.setEnabled(logged_in)
+
+        self._set_service_controls_enabled(logged_in)
+
+    _SERVICE_REQUIRED_BUTTONS = [
+        "service_disable_button",
+        "save_connection_data_button",
+        "save_flags_button",
+        "restore_flags_button",
+        "restore_connection_data_button",
+        "sync_time_button",
+        "reset_button",
+    ]
+
+    _SERVICE_REQUIRED_INPUTS = [
+        "set_logger_id_line",
+        "set_sensor_id_line",
+        "set_wifi_ssid_line",
+        "set_wifi_password_line",
+        "set_mqtt_server_line",
+        "set_ntp_server_line",
+        "set_mqtt_user_line",
+        "set_mqtt_password_line",
+    ]
+
+    _SERVICE_REQUIRED_CHECKBOXES = [
+        "ext_rtc_flag",
+        "flash_memory_flag",
+        "lcd_display_flag",
+        "sht_sensor_flag",
+        "bme_sensor_flag",
+        "ina226_flag",
+        "adc_measurement_flag",
+        "can_flag",
+        "network_enable_flag",
+    ]
+
+    def _set_service_controls_enabled(self, enabled: bool):
+        for name in self._SERVICE_REQUIRED_BUTTONS:
+            widget = getattr(self.ui, name, None)
+            if widget:
+                widget.setEnabled(enabled)
+        for name in self._SERVICE_REQUIRED_INPUTS:
+            widget = getattr(self.ui, name, None)
+            if widget:
+                widget.setEnabled(enabled)
+        for name in self._SERVICE_REQUIRED_CHECKBOXES:
+            widget = getattr(self.ui, name, None)
+            if widget:
+                widget.setEnabled(enabled)
 
 
 if __name__ == "__main__":

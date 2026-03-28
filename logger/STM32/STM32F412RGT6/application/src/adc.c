@@ -53,7 +53,8 @@ void adc1_stop_conversion(void)
 {
     ADC1->CR2 &= ~ADC_CR2_CONT;
     DMA2_Stream0->CR &= ~DMA_SxCR_EN;
-    while (DMA2_Stream0->CR & DMA_SxCR_EN) {}
+    uint32_t t = 100000U;
+    while ((DMA2_Stream0->CR & DMA_SxCR_EN) && --t) {}
 }
 
 uint8_t adc1_is_conversion_complete(void)

@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include "stm32f4xx.h"
 
-void systick_delay_ms(uint32_t ms);
+void     systick_init(void);
+uint32_t systick_get_ms(void);
+void     systick_delay_ms(uint32_t ms);
 
 #endif // SYSTICK_H

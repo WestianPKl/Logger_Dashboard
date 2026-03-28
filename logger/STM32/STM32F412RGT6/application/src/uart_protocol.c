@@ -211,21 +211,21 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
 
         case 0x0300: /*READ: Get SHT40 temperature and humidity */
         {
+
             if (!sht40_present) {
                 uint8_t err = 1;
                 handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
                 break;
             }
 
-            int16_t temp_c_x100 = 0;
-            uint16_t rh_x100 = 0;
-
-            uint8_t e = sht40_data_read_int(&temp_c_x100, &rh_x100);
-            if (e != 0) {
-                uint8_t err = e;
+            if (sht40_error_flag) {
+                uint8_t err = 2;
                 handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
                 break;
             }
+
+            int16_t temp_c_x100 = measurement_sht40.temperature;
+            uint16_t rh_x100 = measurement_sht40.humidity;
 
             uint8_t data[4];
             data[0] = (uint8_t)((temp_c_x100 >> 8) & 0xFF);
@@ -245,46 +245,37 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
                 break;
             }
 
-            uint8_t id = bme280_read_id();
-            if (id != 0x60) {
-                uint8_t err = 1;
-                handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
-                break;
-            }
-
-            bme280_trigger_forced();
-            systick_delay_ms(10);
-
-            int32_t temp_c;
-            uint32_t hum_pct, press_q24_8;
-
-            if (bme280_read_data(&temp_c, &hum_pct, &press_q24_8) != 0) {
+            if (bme280_error_flag) {
                 uint8_t err = 2;
                 handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
                 break;
             }
 
-            if (temp_c < -4000 || temp_c > 8500 || hum_pct > 102400U || press_q24_8 == 0) {
+            int32_t temp_x100   = measurement_bme280.temperature;
+            uint32_t hum_x100   = measurement_bme280.humidity;
+            uint32_t press_pa   = measurement_bme280.pressure;
+
+            if (temp_x100 < -4000 || temp_x100 > 8500 || hum_x100 > 10000U || press_pa == 0) {
                 uint8_t err = 3;
                 handle_response(ERROR_RESPONSE, cmd, param_addr, &err, 1, use_uart1);
                 break;
             }
 
             uint8_t data[12];
-            data[0]  = (uint8_t)((temp_c >> 24) & 0xFF);
-            data[1]  = (uint8_t)((temp_c >> 16) & 0xFF);
-            data[2]  = (uint8_t)((temp_c >> 8) & 0xFF);
-            data[3]  = (uint8_t)(temp_c & 0xFF);
+            data[0]  = (uint8_t)((temp_x100 >> 24) & 0xFF);
+            data[1]  = (uint8_t)((temp_x100 >> 16) & 0xFF);
+            data[2]  = (uint8_t)((temp_x100 >> 8) & 0xFF);
+            data[3]  = (uint8_t)(temp_x100 & 0xFF);
 
-            data[4]  = (uint8_t)((hum_pct >> 24) & 0xFF);
-            data[5]  = (uint8_t)((hum_pct >> 16) & 0xFF);
-            data[6]  = (uint8_t)((hum_pct >> 8) & 0xFF);
-            data[7]  = (uint8_t)(hum_pct & 0xFF);
+            data[4]  = (uint8_t)((hum_x100 >> 24) & 0xFF);
+            data[5]  = (uint8_t)((hum_x100 >> 16) & 0xFF);
+            data[6]  = (uint8_t)((hum_x100 >> 8) & 0xFF);
+            data[7]  = (uint8_t)(hum_x100 & 0xFF);
 
-            data[8]  = (uint8_t)((press_q24_8 >> 24) & 0xFF);
-            data[9]  = (uint8_t)((press_q24_8 >> 16) & 0xFF);
-            data[10] = (uint8_t)((press_q24_8 >> 8) & 0xFF);
-            data[11] = (uint8_t)(press_q24_8 & 0xFF);
+            data[8]  = (uint8_t)((press_pa >> 24) & 0xFF);
+            data[9]  = (uint8_t)((press_pa >> 16) & 0xFF);
+            data[10] = (uint8_t)((press_pa >> 8) & 0xFF);
+            data[11] = (uint8_t)(press_pa & 0xFF);
 
             handle_response(STATUS_OK, cmd, param_addr, data, 12, use_uart1);
             break;
@@ -515,23 +506,13 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
         {
             uint8_t data[7];
 
-            if (ext_rtc_present) {
-                mcp7940n_datetime_t dt_local;
-                if (mcp7940n_get_datetime(&dt_local) != 1) {
-                    handle_response(ERROR_RESPONSE, cmd, param_addr, NULL, 0, use_uart1);
-                    break;
-                }
-
-                data[0] = dt_local.year;
-                data[1] = dt_local.month;
-                data[2] = dt_local.mday;
-                data[3] = dt_local.wday;
-                data[4] = dt_local.hour;
-                data[5] = dt_local.min;
-                data[6] = dt_local.sec;
-            } else {
-                rtc_read_datetime(&data[0], &data[1], &data[2], &data[3], &data[4], &data[5], &data[6]);
-            }
+            data[0] = datetime.year;
+            data[1] = datetime.month;
+            data[2] = datetime.day;
+            data[3] = datetime.weekday;
+            data[4] = datetime.hours;
+            data[5] = datetime.minutes;
+            data[6] = datetime.seconds;
 
             handle_response(STATUS_OK, cmd, param_addr, data, 7, use_uart1);
             break;
@@ -571,9 +552,7 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
                     break;
                 }
             } else {
-                __disable_irq();
                 int rc = rtc_set_datetime(year, month, day, weekday, hours, minutes, seconds);
-                __enable_irq();
 
                 if (rc != 0) {
                     uint8_t err = (uint8_t)(-rc);

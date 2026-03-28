@@ -7,9 +7,9 @@ volatile uint8_t sht40_present = 0;
 volatile uint8_t bme280_present = 0;
 volatile uint8_t ina226_present = 0;
 volatile uint8_t adc_present = 0;
+volatile uint8_t can_present = 0;
 volatile uint8_t adc_was_present = 0;
 
-volatile uint8_t mcp7940n_mfp_flag = 0;
 volatile uint8_t fram_flags_toggle_flag = 0;
 
 volatile uint8_t rtc_wakeup_flag = 0;
@@ -36,6 +36,9 @@ uint8_t rgb_brightness = 0;
 volatile uint8_t backlight_on = 1;
 volatile uint8_t backlight_toggle_flag = 0;
 volatile uint8_t backlight_timer = 0;
+
+volatile uint8_t sht40_error_flag = 0;
+volatile uint8_t bme280_error_flag = 0;
 
 measurement_sht40_t measurement_sht40 = {0};
 measurement_bme280_t measurement_bme280 = {0};
