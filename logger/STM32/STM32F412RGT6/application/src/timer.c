@@ -7,10 +7,11 @@
 // TIM3 CH1: PC6
 // TIM3 CH2: PC7
 // TIM3 CH3: PC8
-// TIM3 CH4: PC9
 
 // TIM4 CH3: PB8
 // TIM4 CH4: PB9
+
+// TIM8 CH4: PC9
 
 // TIM13 - TIMER FOR CYCLIC LCD REFRESH AND SHT40 MEASUREMENT 1s, NOT USED FOR PWM
 // TIM14 - TIMER FOR CYCLIC SHT40 MEASUREMENT - 10min, NOT USED FOR PWM
@@ -22,10 +23,11 @@
 #define TIM3_CH1_PIN 6U
 #define TIM3_CH2_PIN 7U
 #define TIM3_CH3_PIN 8U
-#define TIM3_CH4_PIN 9U
 
 #define TIM4_CH3_PIN 8U
 #define TIM4_CH4_PIN 9U
+
+#define TIM8_CH4_PIN 9U
 
 static uint32_t tim_apb1_clock_hz(void)
 {
@@ -64,42 +66,42 @@ static uint32_t tim_apb1_clock_hz(void)
     return pclk1 * 2U;
 }
 
-// static uint32_t tim_apb2_clock_hz(void)
-// {
-//     uint32_t pclk2;
-//     uint32_t hclk;
-//     uint32_t cfgr;
-//     uint32_t hpre_bits;
-//     uint32_t ppre2_bits;
-//     uint32_t ahb_div;
-//     uint32_t apb2_div;
+static uint32_t tim_apb2_clock_hz(void)
+{
+    uint32_t pclk2;
+    uint32_t hclk;
+    uint32_t cfgr;
+    uint32_t hpre_bits;
+    uint32_t ppre2_bits;
+    uint32_t ahb_div;
+    uint32_t apb2_div;
 
-//     static const uint16_t ahb_presc_table[16] = {
-//         1, 1, 1, 1, 1, 1, 1, 1,
-//         2, 4, 8, 16, 64, 128, 256, 512
-//     };
+    static const uint16_t ahb_presc_table[16] = {
+        1, 1, 1, 1, 1, 1, 1, 1,
+        2, 4, 8, 16, 64, 128, 256, 512
+    };
 
-//     static const uint8_t apb_presc_table[8] = {
-//         1, 1, 1, 1, 2, 4, 8, 16
-//     };
+    static const uint8_t apb_presc_table[8] = {
+        1, 1, 1, 1, 2, 4, 8, 16
+    };
 
-//     cfgr = RCC->CFGR;
+    cfgr = RCC->CFGR;
 
-//     hpre_bits  = (cfgr >> RCC_CFGR_HPRE_Pos)  & 0x0F;
-//     ppre2_bits = (cfgr >> RCC_CFGR_PPRE2_Pos) & 0x07;
+    hpre_bits  = (cfgr >> RCC_CFGR_HPRE_Pos)  & 0x0F;
+    ppre2_bits = (cfgr >> RCC_CFGR_PPRE2_Pos) & 0x07;
 
-//     ahb_div  = ahb_presc_table[hpre_bits];
-//     apb2_div = apb_presc_table[ppre2_bits];
+    ahb_div  = ahb_presc_table[hpre_bits];
+    apb2_div = apb_presc_table[ppre2_bits];
 
-//     hclk  = SystemCoreClock / ahb_div;
-//     pclk2 = hclk / apb2_div;
+    hclk  = SystemCoreClock / ahb_div;
+    pclk2 = hclk / apb2_div;
 
-//     if (apb2_div == 1U) {
-//         return pclk2;
-//     }
+    if (apb2_div == 1U) {
+        return pclk2;
+    }
 
-//     return pclk2 * 2U;
-// }
+    return pclk2 * 2U;
+}
 
 void timer1_init(uint32_t prescaler, uint32_t period){
     RCC->APB2ENR |= RCC_APB2ENR_TIM1EN;
@@ -159,6 +161,24 @@ void timer3_init(uint32_t prescaler, uint32_t period){
     TIM3->CR1 |= TIM_CR1_CEN;
 
     NVIC_EnableIRQ(TIM3_IRQn);
+}
+
+void timer8_init(uint32_t prescaler, uint32_t period){
+    RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
+    (void)RCC->APB2ENR;
+
+    TIM8->CR1 = 0;
+    TIM8->CR2 = 0;
+
+    TIM8->PSC = (prescaler > 0) ? (prescaler - 1U) : 0U;
+    TIM8->ARR = (period > 0) ? (period - 1U) : 0U;
+
+    TIM8->CR2 &= ~TIM_CR2_MMS_Msk;
+    TIM8->CR2 |= (0x2U << TIM_CR2_MMS_Pos);
+
+    TIM8->EGR = TIM_EGR_UG;
+    TIM8->SR = 0;
+    TIM8->CR1 |= TIM_CR1_CEN;
 }
 
 void timer4_init(uint32_t prescaler, uint32_t period){
@@ -389,39 +409,39 @@ void timer3_pwm_ch3_init(uint32_t prescaler, uint32_t period){
     TIM3->CR1 |= TIM_CR1_CEN; 
 }
 
-void timer3_pwm_ch4_init(uint32_t prescaler, uint32_t period){
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
-    (void)RCC->APB1ENR;
+void timer8_pwm_ch4_init(uint32_t prescaler, uint32_t period){
+    RCC->APB2ENR |= RCC_APB2ENR_TIM8EN;
+    (void)RCC->APB2ENR;
 
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
     (void)RCC->AHB1ENR;
 
-    GPIOC->MODER &= ~(3U << (TIM3_CH4_PIN * 2U));
-    GPIOC->MODER |=  (2U << (TIM3_CH4_PIN * 2U));
+    GPIOC->MODER &= ~(3U << (TIM8_CH4_PIN * 2U));
+    GPIOC->MODER |=  (2U << (TIM8_CH4_PIN * 2U));
 
-    GPIOC->OTYPER &= ~(1U << TIM3_CH4_PIN);
-    GPIOC->OSPEEDR |= (2U << (TIM3_CH4_PIN * 2U));
-    GPIOC->PUPDR &= ~(3U << (TIM3_CH4_PIN * 2U));
+    GPIOC->OTYPER &= ~(1U << TIM8_CH4_PIN);
+    GPIOC->OSPEEDR |= (2U << (TIM8_CH4_PIN * 2U));
+    GPIOC->PUPDR &= ~(3U << (TIM8_CH4_PIN * 2U));
 
-    GPIOC->AFR[TIM3_CH4_PIN / 8U] &= ~(0xFU << ((TIM3_CH4_PIN % 8U) * 4U));
-    GPIOC->AFR[TIM3_CH4_PIN / 8U] |=  (0x2U << ((TIM3_CH4_PIN % 8U) * 4U));
+    GPIOC->AFR[TIM8_CH4_PIN / 8U] &= ~(0xFU << ((TIM8_CH4_PIN % 8U) * 4U));
+    GPIOC->AFR[TIM8_CH4_PIN / 8U] |=  (0x3U << ((TIM8_CH4_PIN % 8U) * 4U));
 
-    TIM3->CCMR2 &= ~(TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE);
+    TIM8->CCMR2 &= ~(TIM_CCMR2_OC4M_Msk | TIM_CCMR2_OC4PE);
 
-    TIM3->CCMR2 |= (0x6U << TIM_CCMR2_OC4M_Pos) | TIM_CCMR2_OC4PE;
+    TIM8->CCMR2 |= (0x6U << TIM_CCMR2_OC4M_Pos) | TIM_CCMR2_OC4PE;
 
-    TIM3->CCER |= TIM_CCER_CC4E;
+    TIM8->CCER |= TIM_CCER_CC4E;
 
-    TIM3->PSC = (prescaler > 0) ? (prescaler - 1U) : 0U;
-    TIM3->ARR = (period > 0) ? (period - 1U) : 0U;
+    TIM8->PSC = (prescaler > 0) ? (prescaler - 1U) : 0U;
+    TIM8->ARR = (period > 0) ? (period - 1U) : 0U;
 
-    TIM3->CCR4 = 0;
-    TIM3->CNT = 0;
+    TIM8->CCR4 = 0;
+    TIM8->CNT = 0;
 
-    TIM3->CR1 |= TIM_CR1_ARPE;
-    TIM3->EGR = TIM_EGR_UG;
-
-    TIM3->CR1 |= TIM_CR1_CEN; 
+    TIM8->CR1 |= TIM_CR1_ARPE;
+    TIM8->EGR = TIM_EGR_UG;
+    TIM8->BDTR |= TIM_BDTR_MOE;
+    TIM8->CR1 |= TIM_CR1_CEN; 
 }
 
 void timer4_pwm_ch3_init(uint32_t prescaler, uint32_t period){
@@ -552,10 +572,10 @@ void timer3_pwm_ch3_set_duty(int32_t duty){
     TIM3->CCR3 = (uint32_t)duty;
 }
 
-void timer3_pwm_ch4_set_duty(int32_t duty){
+void timer8_pwm_ch4_set_duty(int32_t duty){
     if (duty < 0) duty = 0;
-    if (duty > (int32_t)TIM3->ARR) duty = (int32_t)TIM3->ARR;
-    TIM3->CCR4 = (uint32_t)duty;
+    if (duty > (int32_t)TIM8->ARR) duty = (int32_t)TIM8->ARR;
+    TIM8->CCR4 = (uint32_t)duty;
 }
 
 void timer4_pwm_ch3_set_duty(uint8_t duty_percent)
@@ -620,7 +640,7 @@ void timer3_pwm_set_color(uint8_t r, uint8_t g, uint8_t b, uint8_t brightness)
     timer3_pwm_ch1_set_duty((int32_t)bd);
 }
 
-void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
+void timer8_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
 {
     uint32_t timer_clock;
     uint32_t prescaler = 1U;
@@ -631,11 +651,11 @@ void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
     }
 
     if (freq == 0U || volume == 0U) {
-        timer3_pwm_ch4_set_duty(0);
+        timer8_pwm_ch4_set_duty(0);
         return;
     }
 
-    timer_clock = tim_apb1_clock_hz();
+    timer_clock = tim_apb2_clock_hz();
     period = timer_clock / freq;
 
     while (period > 65535U && prescaler < 65536U) {
@@ -647,7 +667,7 @@ void timer3_pwm_set_buzzer_freq(uint32_t freq, uint32_t volume)
         period = 2U;
     }
 
-    timer3_pwm_ch4_init(prescaler, period);
+    timer8_pwm_ch4_init(prescaler, period);
 
-    timer3_pwm_ch4_set_duty((uint8_t)volume);
+    timer8_pwm_ch4_set_duty((uint8_t)volume);
 }

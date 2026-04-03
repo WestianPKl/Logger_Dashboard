@@ -27,6 +27,8 @@ def main():
         if not stm32.req_ping():
             raise Exception("STM32 ping failed")
 
+        program.sync_ids_from_stm32_fram()
+
         program.apply_config()
 
         logger_id = cfg.get_logger_id()

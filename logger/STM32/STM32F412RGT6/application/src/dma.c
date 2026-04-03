@@ -240,8 +240,8 @@ void dma_spi1_tx_init(void){
     DMA2_Stream3->CR |= DMA_SxCR_MINC;
     DMA2_Stream3->CR &= ~DMA_SxCR_PINC;
     DMA2_Stream3->CR &= ~DMA_SxCR_CIRC;
-
-    DMA2_Stream3->CR |= DMA_SxCR_TCIE | DMA_SxCR_TEIE;
+    
+    DMA2_Stream3->CR |= DMA_SxCR_TCIE | DMA_SxCR_TEIE; 
     NVIC_EnableIRQ(DMA2_Stream3_IRQn);
 }
 

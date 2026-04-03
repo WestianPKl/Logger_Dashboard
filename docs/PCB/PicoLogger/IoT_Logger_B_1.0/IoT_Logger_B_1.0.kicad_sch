@@ -4368,7 +4368,7 @@
 			)
 		)
 	)
-	(global_label "TIM3_CH4"
+	(global_label "TIM8_CH4"
 		(shape output)
 		(at 130.81 120.65 180)
 		(fields_autoplaced yes)

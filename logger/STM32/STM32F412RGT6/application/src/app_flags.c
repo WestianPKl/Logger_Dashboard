@@ -37,8 +37,8 @@ volatile uint8_t backlight_on = 1;
 volatile uint8_t backlight_toggle_flag = 0;
 volatile uint8_t backlight_timer = 0;
 
-volatile uint8_t sht40_error_flag = 0;
-volatile uint8_t bme280_error_flag = 0;
+volatile uint8_t bme280_error_flag = 1;
+volatile uint8_t sht40_error_flag = 1;
 
 measurement_sht40_t measurement_sht40 = {0};
 measurement_bme280_t measurement_bme280 = {0};

@@ -98,6 +98,19 @@ class Program:
     def set_wifi(self, wifi):
         self.wifi = wifi
 
+    def sync_ids_from_stm32_fram(self):
+        if self.stm32 is None:
+            return
+
+        cfg_data = self.stm32.read_fram_config()
+        if cfg_data.get("logger_id"):
+            self.status_data["logger_id"] = cfg_data["logger_id"]
+        if cfg_data.get("sensor_id"):
+            self.status_data["sensor_id"] = cfg_data["sensor_id"]
+
+        self.save_data()
+        self.apply_config()
+
     def apply_config(self):
         logger_id = self.status_data.get("logger_id", "")
         sensor_id = self.status_data.get("sensor_id", "")

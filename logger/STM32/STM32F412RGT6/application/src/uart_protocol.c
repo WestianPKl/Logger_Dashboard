@@ -483,10 +483,10 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
             break;
         }
 
-        case 0x0506: /*OPERATIONAL: Set buzzer frequency and volume for timer3 PWM (3 bytes: freq_H, freq_L, vol) */
+        case 0x0506: /*OPERATIONAL: Set buzzer frequency and volume for timer8 PWM (3 bytes: freq_H, freq_L, vol) */
         {
             if (req[4] == 0 && req[5] == 0) {
-                timer3_pwm_set_buzzer_freq(0, 0);
+                timer8_pwm_set_buzzer_freq(0, 0);
                 handle_response(STATUS_OK, cmd, param_addr, NULL, 0, use_uart1);
                 break;
             }
@@ -496,7 +496,7 @@ static void handle_request(const uint8_t *req, uint8_t use_uart1)
 
             if (vol > 100U) vol = 100U;
 
-            timer3_pwm_set_buzzer_freq((uint32_t)freq, (uint32_t)vol);
+            timer8_pwm_set_buzzer_freq((uint32_t)freq, (uint32_t)vol);
             uint8_t data[3] = { req[4], req[5], vol };
             handle_response(STATUS_OK, cmd, param_addr, data, 3, use_uart1);
             break;

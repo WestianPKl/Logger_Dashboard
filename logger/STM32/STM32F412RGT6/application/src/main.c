@@ -98,7 +98,6 @@ static void clock_init_84mhz_from_hsi(void)
     RCC->CFGR &= ~RCC_CFGR_SW;
     RCC->CFGR |= RCC_CFGR_SW_PLL;
     while ((RCC->CFGR & RCC_CFGR_SWS) != RCC_CFGR_SWS_PLL) {}
-
     SystemCoreClock = 84000000U;
 }
 
@@ -125,6 +124,7 @@ int main(void)
     timer3_pwm_ch1_init(84, 1000);
     timer3_pwm_ch2_init(84, 1000);
     timer3_pwm_ch3_init(84, 1000);
+    timer8_pwm_ch4_init(84, 1000);
 
     timer1_pwm_ch1_init(84, 1000);
     timer2_pwm_ch3_init(84, 1000);
@@ -228,7 +228,6 @@ int main(void)
     if (bme280_present) {
         bme280_init();
     }
-    
 
     while (1) {
         if (btn1_pressed) { btn1_pressed = 0; btn1_handler(); }
