@@ -56,7 +56,7 @@ typedef struct
 static bme280_calib_t calib;
 static int32_t t_fine = 0;
 
-HAL_StatusTypeDef spi1_xfer_sync(const uint8_t *tx, uint8_t *rx, uint16_t len)
+static HAL_StatusTypeDef spi1_xfer_sync(const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     if ((tx == NULL) || (rx == NULL) || (len == 0U)) {
         return HAL_ERROR;

@@ -12,12 +12,7 @@
 #include "support.h"
 #include "app_flags.h"
 #include "version.h"
-
-extern SemaphoreHandle_t sensorDataMutex;
-extern SemaphoreHandle_t rtcDataMutex;
-extern SemaphoreHandle_t canMutex;
-
-extern volatile uint16_t adc_data_buffer[ADC_BUFFER_SIZE];
+#include "adc.h"
 
 uint32_t tx_mailbox;
 volatile uint8_t counter = 0U;
@@ -97,15 +92,6 @@ static int send_frame_0x12(void)
 
     memcpy(build_date, FW_BUILD_DATE, 10);
 
-    // tx_data[0] = build_date[0];
-    // tx_data[1] = build_date[1];
-    // tx_data[2] = build_date[2];
-    // tx_data[3] = build_date[3];
-    // tx_data[4] = build_date[5];
-    // tx_data[5] = build_date[6];
-    // tx_data[6] = build_date[8];
-    // tx_data[7] = build_date[9];
-
     tx_data[0] = build_date[2];
     tx_data[1] = build_date[3];
     tx_data[2] = build_date[5];
@@ -133,15 +119,6 @@ static int send_frame_0x13(void)
     if (info->magic == INFO_MAGIC) {
         memcpy(production_date, info->prod_date, 10);
     }
-
-    // tx_data[0] = production_date[0];
-    // tx_data[1] = production_date[1];
-    // tx_data[2] = production_date[2];
-    // tx_data[3] = production_date[3];
-    // tx_data[4] = production_date[5];
-    // tx_data[5] = production_date[6];
-    // tx_data[6] = production_date[8];
-    // tx_data[7] = production_date[9];
 
     tx_data[0] = production_date[2];
     tx_data[1] = production_date[3];

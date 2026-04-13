@@ -3,12 +3,35 @@
 #include "FreeRTOS.h"
 #include "queue.h"
 #include "task.h"
+#include "app_flags.h"
 #include "can_protocol.h"
 
-extern QueueHandle_t canQueue;
+CAN_HandleTypeDef hcan1;
 
-#include "can.h"
-#include "main.h"
+SemaphoreHandle_t canMutex;
+QueueHandle_t canQueue;
+
+TaskHandle_t CANTaskHandle;
+
+void MX_CAN1_Init(void)
+{
+  hcan1.Instance = CAN1;
+  hcan1.Init.Prescaler = 6;
+  hcan1.Init.Mode = CAN_MODE_NORMAL;
+  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_11TQ;
+  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;
+  hcan1.Init.TimeTriggeredMode = DISABLE;
+  hcan1.Init.AutoBusOff = ENABLE;
+  hcan1.Init.AutoWakeUp = DISABLE;
+  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.ReceiveFifoLocked = DISABLE;
+  hcan1.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
 
 uint8_t can_start(void)
 {
@@ -119,4 +142,42 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
     }
 
     portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void CANTask(void *argument)
+{
+    if (xEventGroupGetBits(appEvents) & EVT_CAN_PRESENT)
+    {
+        if (xSemaphoreTake(canMutex, portMAX_DELAY) == pdTRUE)
+        {
+            if (can_filter_accept_all() != 1)
+            {
+                xEventGroupClearBits(appEvents, EVT_CAN_PRESENT);
+            }
+            else if (can_start() != 1)
+            {
+                xEventGroupClearBits(appEvents, EVT_CAN_PRESENT);
+            }
+
+            xSemaphoreGive(canMutex);
+        }
+        else
+        {
+            xEventGroupClearBits(appEvents, EVT_CAN_PRESENT);
+        }
+    }
+
+    while (1)
+    {
+        if (xEventGroupGetBits(appEvents) & EVT_CAN_PRESENT)
+        {
+            if (xSemaphoreTake(canMutex, pdMS_TO_TICKS(200)) == pdTRUE)
+            {
+                send_cyclic_frames();
+                xSemaphoreGive(canMutex);
+            }
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(400));
+    }
 }

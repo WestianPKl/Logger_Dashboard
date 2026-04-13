@@ -3,6 +3,18 @@
 
 #include <stdint.h>
 #include "main.h"
+#include "FreeRTOS.h"
+#include "i2c.h"
+#include "timers.h"
+
+#define LCD_NOTIFY_REFRESH (1UL << 0)
+#define LCD_NOTIFY_COMMAND (1UL << 1)
+#define LCD_NOTIFY_REINIT  (1UL << 2)
+
+extern QueueHandle_t lcdCmdQueue;
+
+extern TaskHandle_t LCDTaskHandle;
+extern TimerHandle_t backlightTimerHandle;
 
 typedef enum {
     LCD_CLEAR,
@@ -14,7 +26,9 @@ typedef struct {
     uint8_t flag;
 } lcd_msg_t;
 
+void LCDTask(void *argument);
 void lcd_init(void);
+void lcd_backlight_timer_callback(TimerHandle_t xTimer);
 uint8_t lcd_is_present(void);
 void lcd_mark_present(uint8_t present);
 void lcd_send_string(const char *str);

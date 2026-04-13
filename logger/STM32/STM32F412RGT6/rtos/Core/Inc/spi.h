@@ -3,14 +3,19 @@
 
 #include <stdint.h>
 #include "main.h"
-#include "stm32f412rx.h"
-#include "stm32f4xx_hal_spi.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
+extern SPI_HandleTypeDef hspi1;
+extern DMA_HandleTypeDef hdma_spi1_rx;
+extern DMA_HandleTypeDef hdma_spi1_tx;
+
+extern SemaphoreHandle_t spiMutex;
 extern TaskHandle_t spiOwnerTask;
+
 extern volatile uint8_t spiError;
 
+void MX_SPI1_Init(void);
 int8_t wait_spi_done(TickType_t timeoutTicks);
 void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef *hspi);
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi);

@@ -24,7 +24,9 @@ set(MX_Include_Dirs
 set(MX_Application_Src
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/app_flags.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/adc.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/support.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/gpio.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/flash_log.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/mcp7940n.c
     ${CMAKE_CURRENT_SOURCE_DIR}/../../Core/Src/fm24cl16b.c

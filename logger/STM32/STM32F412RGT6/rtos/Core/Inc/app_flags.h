@@ -49,9 +49,16 @@ typedef struct
     uint32_t duty_cycle;
 } app_buzzer_t;
 
+#define EVT_ALL_PERIPHERAL_BITS ( \
+    EVT_EXT_RTC_PRESENT | EVT_FLASH_PRESENT | EVT_LCD_PRESENT | \
+    EVT_SHT40_PRESENT | EVT_BME280_PRESENT | EVT_ADC_PRESENT | EVT_CAN_PRESENT)
+
+extern volatile uint16_t flag_100ms;
 extern volatile app_io_state_t app_io_state;
 extern volatile app_rgb_t app_rgb;
 extern volatile app_buzzer_t app_buzzer;
 extern EventGroupHandle_t appEvents;
+
+void app_flags_apply(uint8_t cfg_flags);
 
 #endif // APP_FLAGS_H

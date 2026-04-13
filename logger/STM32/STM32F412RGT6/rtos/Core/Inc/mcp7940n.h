@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "main.h"
+#include "rtc.h"
 
 #define MCP7940N_ADDR              0x6F
 

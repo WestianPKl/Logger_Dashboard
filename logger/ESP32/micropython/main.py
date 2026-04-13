@@ -22,7 +22,7 @@ def main():
         stm32 = STM32UART(uart_device)
         program.stm32 = stm32
 
-        time.sleep(4)
+        time.sleep(20)
 
         if not stm32.req_ping():
             raise Exception("STM32 ping failed")

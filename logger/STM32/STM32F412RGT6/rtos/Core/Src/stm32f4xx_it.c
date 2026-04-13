@@ -1,5 +1,7 @@
 #include "main.h"
 #include "stm32f4xx_it.h"
+#include "spi.h"
+#include "i2c.h"
 
 extern DMA_HandleTypeDef hdma_adc1;
 extern CAN_HandleTypeDef hcan1;

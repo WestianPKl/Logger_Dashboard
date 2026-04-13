@@ -13,41 +13,9 @@ extern "C" {
 #include "bme280.h"
 #include "rtc.h"
 
-extern ADC_HandleTypeDef hadc1;
-extern DMA_HandleTypeDef hdma_adc1;
-extern CAN_HandleTypeDef hcan1;
-extern I2C_HandleTypeDef hi2c1;
-extern RTC_HandleTypeDef hrtc;
-extern SPI_HandleTypeDef hspi1;
-extern DMA_HandleTypeDef hdma_spi1_rx;
-extern DMA_HandleTypeDef hdma_spi1_tx;
-extern TIM_HandleTypeDef htim1;
-extern TIM_HandleTypeDef htim2;
-extern TIM_HandleTypeDef htim3;
-extern TIM_HandleTypeDef htim4;
-extern TIM_HandleTypeDef htim8;
-extern TIM_HandleTypeDef htim13;
-extern UART_HandleTypeDef huart1;
-extern UART_HandleTypeDef huart2;
-extern DMA_HandleTypeDef hdma_usart1_rx;
-extern DMA_HandleTypeDef hdma_usart1_tx;
-extern DMA_HandleTypeDef hdma_usart2_rx;
-extern DMA_HandleTypeDef hdma_usart2_tx;
-
-void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-
 void Error_Handler(void);
+void measure_trigger_update(void);
 
-#define ADC_CHANNEL_COUNT 2
-#define ADC_SAMPLES_PER_CHANNEL 1
-#define ADC_BUFFER_SIZE (ADC_CHANNEL_COUNT * ADC_SAMPLES_PER_CHANNEL)
-#define FRAME_LEN_APP 32
-#define FRAME_HEADER_SIZE 5
-#define FRAME_PAYLOAD_SIZE (FRAME_LEN_APP - FRAME_HEADER_SIZE)
-#define UART1_RX_BUFFER_SIZE 128
-#define UART1_RX_FRAME_LEN FRAME_LEN_APP
-#define UART2_RX_BUFFER_SIZE 128
-#define UART2_RX_FRAME_LEN FRAME_LEN_APP
 #define FLASH_Hold_Pin GPIO_PIN_13
 #define FLASH_Hold_GPIO_Port GPIOC
 #define CON_1_Pin GPIO_PIN_0
@@ -99,33 +67,15 @@ void Error_Handler(void);
 #define PWM_CON_4_Pin GPIO_PIN_9
 #define PWM_CON_4_GPIO_Port GPIOB
 
-#define UART_RX_MSG_MAX_LEN ((UART1_RX_BUFFER_SIZE > UART2_RX_BUFFER_SIZE) ? UART1_RX_BUFFER_SIZE : UART2_RX_BUFFER_SIZE)
 
-#define LCD_NOTIFY_REFRESH (1UL << 0)
-#define LCD_NOTIFY_COMMAND (1UL << 1)
-#define LCD_NOTIFY_REINIT  (1UL << 2)
-
-typedef struct {
-    uint8_t data[UART_RX_MSG_MAX_LEN];
-    uint16_t len;
-    uint8_t use_uart1;
-} uart_rx_msg_t;
-
-extern volatile uint16_t adc_data_buffer[ADC_BUFFER_SIZE];
 extern sht40_data_t sht40_data;
 extern bme280_data_t bme280_data;
 extern rtc_date_time_t rtc_date_time;
 
-extern QueueHandle_t rtcCmdQueue;
 extern QueueHandle_t framCmdQueue;
-extern QueueHandle_t lcdCmdQueue;
-extern QueueHandle_t uartRxQueue;
-extern QueueHandle_t canQueue;
 extern SemaphoreHandle_t sensorDataMutex;
-extern SemaphoreHandle_t rtcDataMutex;
-extern SemaphoreHandle_t canMutex;
 
-extern TaskHandle_t FRAMTaskHandle, RTCTaskHandle, SensorTaskHandle, LCDTaskHandle, ReceiverTaskHandle, Button1TaskHandle, Button2TaskHandle, MeasureTaskHandle;
+extern TaskHandle_t SensorTaskHandle, MeasureTaskHandle, FRAMTaskHandle;
 
 #ifdef __cplusplus
 }

@@ -5,7 +5,6 @@
 #include "queue.h"
 #include "event_groups.h"
 #include "uart_protocol.h"
-#include "uart.h"
 #include "lcd.h"
 #include "sht40.h"
 #include "bme280.h"
@@ -20,12 +19,10 @@
 #include "mx25l25673gm2i.h"
 #include "version.h"
 #include "flash_log.h"
+#include "adc.h"
 
 #define STATUS_OK       0x40
 #define ERROR_RESPONSE  0x7F
-
-extern SemaphoreHandle_t i2cMutex;
-extern SemaphoreHandle_t spiMutex;
 
 uint8_t uart2_rx_buf[UART2_RX_BUFFER_SIZE];
 uint8_t uart2_tx_frame[FRAME_LEN_APP];
@@ -728,25 +725,7 @@ void handle_request(const uint8_t *req, uint8_t use_uart1)
             xSemaphoreGive(i2cMutex);
 
             {
-                EventBits_t bits_to_set = 0;
-                EventBits_t bits_to_clear = EVT_EXT_RTC_PRESENT |
-                                            EVT_FLASH_PRESENT |
-                                            EVT_LCD_PRESENT |
-                                            EVT_SHT40_PRESENT |
-                                            EVT_BME280_PRESENT |
-                                            EVT_ADC_PRESENT |
-                                            EVT_CAN_PRESENT;
-
-                if (flags & FRAM_FLAG_EXT_RTC_PRESENT) bits_to_set |= EVT_EXT_RTC_PRESENT;
-                if (flags & FRAM_FLAG_FLASH_PRESENT)   bits_to_set |= EVT_FLASH_PRESENT;
-                if (flags & FRAM_FLAG_DISPLAY_PRESENT) bits_to_set |= EVT_LCD_PRESENT;
-                if (flags & FRAM_FLAG_SHT40_PRESENT)   bits_to_set |= EVT_SHT40_PRESENT;
-                if (flags & FRAM_FLAG_BME280_PRESENT)  bits_to_set |= EVT_BME280_PRESENT;
-                if (flags & FRAM_FLAG_ADC_PRESENT)     bits_to_set |= EVT_ADC_PRESENT;
-                if (flags & FRAM_FLAG_CAN_PRESENT)     bits_to_set |= EVT_CAN_PRESENT;
-
-                xEventGroupClearBits(appEvents, bits_to_clear);
-                xEventGroupSetBits(appEvents, bits_to_set);
+                app_flags_apply(flags);
                 xEventGroupSetBits(appEvents, EVT_LCD_REINIT | EVT_RTC_REINIT | EVT_BME280_REINIT);
 
                 if (LCDTaskHandle != NULL) {

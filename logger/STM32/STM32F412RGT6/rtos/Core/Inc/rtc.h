@@ -13,10 +13,17 @@ typedef struct {
     uint8_t seconds;
 } rtc_date_time_t;
 
-
 #include "main.h"
 
+extern RTC_HandleTypeDef hrtc;
 
+extern QueueHandle_t rtcCmdQueue;
+extern SemaphoreHandle_t rtcDataMutex;
+
+extern TaskHandle_t RTCTaskHandle;
+
+void MX_RTC_Init(void);
+void RTCTask(void *argument);
 int8_t rtc_set_datetime(uint8_t year, uint8_t month, uint8_t day, uint8_t weekday,
                       uint8_t hours, uint8_t minutes, uint8_t seconds);
 int8_t rtc_get_datetime(uint8_t *year, uint8_t *month, uint8_t *day, uint8_t *weekday,

@@ -1,6 +1,8 @@
 #include "lcd.h"
 #include "FreeRTOS.h"
+#include "app_flags.h"
 #include "task.h"
+#include "rtc_locale.h"
 
 #define LCD_I2C_ADDR 0x27U
 
@@ -22,6 +24,13 @@
 
 static uint8_t lcd_present = 1U;
 static uint8_t lcd_backlight_mask = LCD_BL;
+
+QueueHandle_t lcdCmdQueue;
+TaskHandle_t LCDTaskHandle;
+
+TimerHandle_t backlightTimerHandle;
+
+static void lcd_render_screen(void);
 
 static int8_t lcd_i2c_write(uint8_t data)
 {
@@ -321,5 +330,170 @@ void lcd_clear_eol(uint8_t col, uint8_t row)
     lcd_set_cursor(col, row);
     for (uint8_t i = col; i < 16U; i++) {
         lcd_write8bits((uint8_t)' ', 1U);
+    }
+}
+
+void LCDTask(void *argument)
+{
+    uint32_t notifyValue;
+    lcd_msg_t msg;
+    uint8_t need_render;
+
+    EventBits_t bits = xEventGroupGetBits(appEvents);
+    if ((bits & EVT_LCD_PRESENT) && xSemaphoreTake(i2cMutex, portMAX_DELAY) == pdTRUE)
+    {
+        lcd_init();
+        lcd_backlight(0);
+        if (!lcd_is_present()) {
+            xEventGroupClearBits(appEvents, EVT_LCD_PRESENT);
+        }
+        xSemaphoreGive(i2cMutex);
+    }
+
+    lcd_render_screen();
+
+    while (1)
+    {
+        need_render = 0U;
+        xTaskNotifyWait(0, 0xFFFFFFFFU, &notifyValue, portMAX_DELAY);
+
+        if (notifyValue & LCD_NOTIFY_REINIT)
+        {
+            EventBits_t bits = xEventGroupGetBits(appEvents);
+            if ((bits & EVT_LCD_PRESENT) && xSemaphoreTake(i2cMutex, portMAX_DELAY) == pdTRUE)
+            {
+                lcd_init();
+                lcd_backlight(0);
+                if (!lcd_is_present()) {
+                    xEventGroupClearBits(appEvents, EVT_LCD_PRESENT);
+                }
+                xSemaphoreGive(i2cMutex);
+            }
+            need_render = 1U;
+        }
+
+        if (notifyValue & LCD_NOTIFY_COMMAND)
+        {
+            while (xQueueReceive(lcdCmdQueue, &msg, 0) == pdTRUE)
+            {
+                if (xSemaphoreTake(i2cMutex, portMAX_DELAY) == pdTRUE)
+                {
+                    if (msg.cmd == LCD_BACKLIGHT) {
+                        lcd_backlight(msg.flag);
+                    } else if (msg.cmd == LCD_CLEAR) {
+                        lcd_clear();
+                        need_render = 1U;
+                    }
+                    xSemaphoreGive(i2cMutex);
+                }
+            }
+        }
+
+        if ((notifyValue & LCD_NOTIFY_REFRESH) || need_render)
+        {
+            lcd_render_screen();
+        }
+    }
+}
+
+static void lcd_render_screen(void)
+{
+    rtc_date_time_t date_time_local = {0};
+    sht40_data_t sht40_data_local = {0};
+    bme280_data_t bme280_data_local = {0};
+    EventBits_t bits;
+    uint8_t second_marker;
+    uint16_t current_year;
+    uint8_t rtc_not_synced;
+
+    if (xSemaphoreTake(sensorDataMutex, portMAX_DELAY) == pdTRUE)
+    {
+        sht40_data_local = sht40_data;
+        bme280_data_local = bme280_data;
+        xSemaphoreGive(sensorDataMutex);
+    }
+
+    if (xSemaphoreTake(rtcDataMutex, portMAX_DELAY) == pdTRUE)
+    {
+        date_time_local = rtc_date_time;
+        xSemaphoreGive(rtcDataMutex);
+    }
+
+    rtc_utc_to_warsaw(&date_time_local.year, &date_time_local.month, &date_time_local.day,
+                      &date_time_local.weekday, &date_time_local.hours,
+                      &date_time_local.minutes, &date_time_local.seconds);
+
+    second_marker = (date_time_local.seconds & 1U);
+    bits = xEventGroupGetBits(appEvents);
+
+    if ((bits & EVT_LCD_PRESENT) == 0U) {
+        return;
+    }
+
+    current_year = (uint16_t)(2000U + date_time_local.year);
+    rtc_not_synced = (current_year <= 2000U) ? 1U : 0U;
+
+    if (xSemaphoreTake(i2cMutex, portMAX_DELAY) == pdTRUE)
+    {
+        lcd_set_cursor(0, 0);
+
+        if (rtc_not_synced)
+        {
+            lcd_send_string("Initializing... ");
+            lcd_set_cursor(0, 1);
+            lcd_send_string("                ");
+            xSemaphoreGive(i2cMutex);
+            return;
+        }
+
+        lcd_send_decimal(current_year, 4);
+        lcd_send_string("-");
+        lcd_send_decimal(date_time_local.month, 2);
+        lcd_send_string("-");
+        lcd_send_decimal(date_time_local.day, 2);
+        lcd_send_string(" ");
+        lcd_send_decimal(date_time_local.hours, 2);
+        lcd_send_string(second_marker ? ":" : " ");
+        lcd_send_decimal(date_time_local.minutes, 2);
+
+        lcd_set_cursor(0, 1);
+        lcd_send_string("TH:");
+        lcd_send_string(" ");
+        if ((bits & EVT_SHT40_PRESENT) && !(bits & EVT_BME280_PRESENT))
+        {
+
+            lcd_send_temp_1dp_from_x100(sht40_data_local.temperature);
+            lcd_send_string(" ");
+            lcd_send_hum_1dp_from_x100(sht40_data_local.humidity);
+            lcd_send_string("  ");
+        }
+        else if (bits & EVT_BME280_PRESENT)
+        {
+            lcd_send_temp_1dp_from_x100(bme280_data_local.temperature);
+            lcd_send_string(" ");
+            lcd_send_hum_1dp_from_x100(bme280_data_local.humidity);
+            lcd_send_string("  ");
+        }
+        else
+        {
+            lcd_send_string("No sensor data   ");
+        }
+
+        xSemaphoreGive(i2cMutex);
+    }
+}
+
+void lcd_backlight_timer_callback(TimerHandle_t xTimer)
+{
+    lcd_msg_t msg = { .cmd = LCD_BACKLIGHT, .flag = 0U };
+
+    if (lcdCmdQueue != NULL)
+    {
+        (void)xQueueSend(lcdCmdQueue, &msg, 0);
+    }
+
+    if (LCDTaskHandle != NULL)
+    {
+        xTaskNotify(LCDTaskHandle, LCD_NOTIFY_COMMAND, eSetBits);
     }
 }
