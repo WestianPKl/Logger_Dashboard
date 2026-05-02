@@ -4,7 +4,6 @@ volatile uint16_t adc_data_buffer[ADC_BUFFER_SIZE];
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
-
 void MX_ADC1_Init(void)
 {
   ADC_ChannelConfTypeDef sConfig = {0};

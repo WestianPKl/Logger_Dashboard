@@ -32,6 +32,12 @@ TimerHandle_t backlightTimerHandle;
 
 static void lcd_render_screen(void);
 
+/*
+    * @brief  Transmit a single byte to the LCD via the I2C expander.
+    *         Marks the LCD as absent if the I2C transmission fails.
+    * @param  data: The byte to transmit.
+    * @retval 1 on success, -1 on failure.
+*/
 static int8_t lcd_i2c_write(uint8_t data)
 {
     int r;
@@ -46,6 +52,9 @@ static int8_t lcd_i2c_write(uint8_t data)
     return r == HAL_OK ? 1 : -1;
 }
 
+/*
+    * @brief  Short busy-wait delay used for LCD enable-pulse timing.
+*/
 static inline void lcd_delay_short(void)
 {
     for (volatile int i = 0; i < 200; i++) {
@@ -53,6 +62,10 @@ static inline void lcd_delay_short(void)
     }
 }
 
+/*
+    * @brief  Pulse the LCD enable line high then low to latch data.
+    * @param  data: The byte with the data/RS/BL bits already set.
+*/
 static void lcd_pulse_enable(uint8_t data)
 {
     if (!lcd_present) return;
@@ -63,6 +76,11 @@ static void lcd_pulse_enable(uint8_t data)
     lcd_delay_short();
 }
 
+/*
+    * @brief  Write a 4-bit nibble to the LCD.
+    * @param  nibble: Lower 4 bits contain the data to send.
+    * @param  rs: Non-zero to set RS (data mode), 0 for command mode.
+*/
 static void lcd_write4bits(uint8_t nibble, uint8_t rs)
 {
     uint8_t data = (uint8_t)((nibble & 0x0FU) << 4);
@@ -75,12 +93,21 @@ static void lcd_write4bits(uint8_t nibble, uint8_t rs)
     lcd_pulse_enable(data);
 }
 
+/*
+    * @brief  Write a full byte to the LCD as two 4-bit nibble transfers.
+    * @param  byte: The byte to send.
+    * @param  rs: Non-zero for data mode, 0 for command mode.
+*/
 static void lcd_write8bits(uint8_t byte, uint8_t rs)
 {
     lcd_write4bits((uint8_t)(byte >> 4), rs);
     lcd_write4bits((uint8_t)(byte & 0x0F), rs);
 }
 
+/*
+    * @brief  Send a command byte to the LCD.
+    * @param  cmd: The HD44780 command to send.
+*/
 static void lcd_command(uint8_t cmd)
 {
     lcd_write8bits(cmd, 0U);
@@ -92,6 +119,11 @@ static void lcd_command(uint8_t cmd)
     }
 }
 
+/*
+    * @brief  Convert a value in hundredths to tenths with rounding.
+    * @param  v_x100: Value multiplied by 100.
+    * @retval Value multiplied by 10, rounded to nearest.
+*/
 static int32_t x100_to_x10_round(int32_t v_x100)
 {
     if (v_x100 >= 0) {
@@ -101,6 +133,11 @@ static int32_t x100_to_x10_round(int32_t v_x100)
     }
 }
 
+/*
+    * @brief  Display a fixed-point value with 1 decimal place (value/10) on the LCD.
+    * @param  v_x10: Value multiplied by 10.
+    * @param  int_digits: Minimum number of integer digits to show.
+*/
 static void lcd_send_fixed_x10(int32_t v_x10, uint8_t int_digits)
 {
     uint32_t mag;
@@ -396,6 +433,10 @@ void LCDTask(void *argument)
     }
 }
 
+/*
+    * @brief  Render the main display screen showing date/time on row 0 and sensor data on row 1.
+    *         Reads current sensor and RTC data, converts UTC to Warsaw time, and updates the LCD.
+*/
 static void lcd_render_screen(void)
 {
     rtc_date_time_t date_time_local = {0};

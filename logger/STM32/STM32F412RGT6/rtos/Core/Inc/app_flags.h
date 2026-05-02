@@ -20,6 +20,9 @@
 #define EVT_ADC_PRESENT        (1UL << 10)
 #define EVT_CAN_PRESENT        (1UL << 11)
 
+/*
+    * @brief  Structure holding the state of application I/O: buttons, LEDs, and GPIO pins.
+*/
 typedef struct
 {
     uint8_t btn1_pressed;
@@ -35,6 +38,9 @@ typedef struct
     uint8_t esp32_write_state;
 } app_io_state_t;
 
+/*
+    * @brief  Structure holding RGB LED color settings.
+*/
 typedef struct
 {
     uint8_t r;
@@ -43,6 +49,9 @@ typedef struct
     uint8_t brightness;
 } app_rgb_t;
 
+/*
+    * @brief  Structure holding buzzer configuration: frequency and duty cycle.
+*/
 typedef struct
 {
     uint32_t freq;
@@ -59,6 +68,13 @@ extern volatile app_rgb_t app_rgb;
 extern volatile app_buzzer_t app_buzzer;
 extern EventGroupHandle_t appEvents;
 
+/*
+    * @brief  Apply the configuration flags read from FRAM to the application event group.
+    *         This function translates the bitwise flags from FRAM into corresponding event bits
+    *         in the FreeRTOS event group, allowing tasks to react to the presence of peripherals.
+    * @param  cfg_flags: The configuration flags read from FRAM indicating which peripherals are present.
+    * @retval None      
+*/
 void app_flags_apply(uint8_t cfg_flags);
 
 #endif // APP_FLAGS_H

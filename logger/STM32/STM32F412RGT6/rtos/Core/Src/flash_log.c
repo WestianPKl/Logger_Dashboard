@@ -17,6 +17,9 @@ extern SemaphoreHandle_t flashLogMutex;
 #define FLASH_LOG_META_MAGIC        0x464C4F47u
 #define FLASH_LOG_META_VERSION      1u
 
+/*
+    * @brief  Internal structures for flash log metadata and runtime state.
+*/
 typedef struct __attribute__((packed)) {
     uint32_t magic;
     uint32_t version;
@@ -40,11 +43,21 @@ typedef struct {
 
 static flash_log_state_t g_log;
 
+/*
+    * @brief  Compute the flash memory address for a given physical record index.
+    * @param  index: The physical record index within the flash log area.
+    * @retval The byte address in external flash memory.
+*/
 static uint32_t flash_log_addr_from_index(uint32_t index)
 {
     return FLASH_LOG_BASE_ADDR + (index * FLASH_LOG_RECORD_SIZE);
 }
 
+/*
+    * @brief  Check if a flash log record is in erased state (all 0xFF bytes).
+    * @param  rec: Pointer to the record to check.
+    * @retval 1 if erased, 0 otherwise.
+*/
 static int flash_log_record_is_erased(const flash_log_record_t *rec)
 {
     const uint8_t *p = (const uint8_t *)rec;
@@ -58,6 +71,11 @@ static int flash_log_record_is_erased(const flash_log_record_t *rec)
     return 1;
 }
 
+/*
+    * @brief  Validate a flash log record by checking it is not erased and its CRC32 is correct.
+    * @param  rec: Pointer to the record to validate.
+    * @retval 1 if valid, 0 otherwise.
+*/
 static int flash_log_record_is_valid(const flash_log_record_t *rec)
 {
     flash_log_record_t tmp;
@@ -74,6 +92,13 @@ static int flash_log_record_is_valid(const flash_log_record_t *rec)
     return (crc32((const uint8_t *)&tmp, sizeof(tmp)) == crc) ? 1 : 0;
 }
 
+/*
+    * @brief  Build a flash log record from sensor data, filling in the sequence number, timestamp, and CRC.
+    * @param  rec: Pointer to the record to fill.
+    * @param  timestamp: Unix-style timestamp.
+    * @param  bme: Pointer to BME280 data, or NULL.
+    * @param  sht: Pointer to SHT40 data, used when bme is NULL.
+*/
 static void flash_log_build_record(flash_log_record_t *rec,
                                    uint32_t timestamp,
                                    const bme280_data_t *bme,
@@ -98,6 +123,10 @@ static void flash_log_build_record(flash_log_record_t *rec,
     rec->crc32 = crc32((const uint8_t *)rec, sizeof(*rec));
 }
 
+/*
+    * @brief  Return the physical index of the oldest record in the circular buffer.
+    * @retval Physical index (0 when the buffer has not yet wrapped).
+*/
 static uint32_t flash_log_oldest_physical_index(void)
 {
     if (g_log.count == 0u) {
@@ -111,6 +140,12 @@ static uint32_t flash_log_oldest_physical_index(void)
     return g_log.write_index;
 }
 
+/*
+    * @brief  Read a raw record from external flash at a given physical index, guarded by the SPI mutex.
+    * @param  physical_index: The physical slot index in the flash log area.
+    * @param  rec: Pointer to the buffer where the record will be stored.
+    * @retval 1 on success, -1 on failure.
+*/
 static int flash_log_raw_read(uint32_t physical_index, flash_log_record_t *rec)
 {
     int result;
@@ -128,6 +163,12 @@ static int flash_log_raw_read(uint32_t physical_index, flash_log_record_t *rec)
     return result;
 }
 
+/*
+    * @brief  Write a raw record to external flash at a given physical index, guarded by the SPI mutex.
+    * @param  physical_index: The physical slot index in the flash log area.
+    * @param  rec: Pointer to the record to write.
+    * @retval 1 on success, -1 on failure.
+*/
 static int flash_log_raw_write(uint32_t physical_index, const flash_log_record_t *rec)
 {   
     int result;
@@ -144,6 +185,10 @@ static int flash_log_raw_write(uint32_t physical_index, const flash_log_record_t
     return result;
 }
 
+/*
+    * @brief  Populate a metadata structure from the current runtime state, including CRC.
+    * @param  meta: Pointer to the metadata structure to fill.
+*/
 static void flash_log_meta_fill(flash_log_meta_t *meta)
 {
     memset(meta, 0, sizeof(*meta));
@@ -160,6 +205,11 @@ static void flash_log_meta_fill(flash_log_meta_t *meta)
     meta->crc32 = crc32((const uint8_t *)meta, sizeof(*meta));
 }
 
+/*
+    * @brief  Validate a metadata structure by checking magic, version, ranges, and CRC.
+    * @param  meta: Pointer to the metadata structure to validate.
+    * @retval 1 if valid, 0 otherwise.
+*/
 static int flash_log_meta_is_valid(const flash_log_meta_t *meta)
 {
     flash_log_meta_t tmp;
@@ -180,6 +230,12 @@ static int flash_log_meta_is_valid(const flash_log_meta_t *meta)
 }
 
 
+/*
+    * @brief  Read a metadata block from FRAM at the specified address, guarded by the I2C mutex.
+    * @param  addr: FRAM address to read from.
+    * @param  meta: Pointer to the buffer where the metadata will be stored.
+    * @retval 1 on success, -1 on failure.
+*/
 static int flash_log_meta_read(uint16_t addr, flash_log_meta_t *meta)
 {
     int result;
@@ -198,6 +254,12 @@ static int flash_log_meta_read(uint16_t addr, flash_log_meta_t *meta)
     return result;
 }
 
+/*
+    * @brief  Write a metadata block to FRAM at the specified address, guarded by the I2C mutex.
+    * @param  addr: FRAM address to write to.
+    * @param  meta: Pointer to the metadata to write.
+    * @retval 1 on success, -1 on failure.
+*/
 static int flash_log_meta_write(uint16_t addr, const flash_log_meta_t *meta)
 {
     int result;
@@ -216,6 +278,10 @@ static int flash_log_meta_write(uint16_t addr, const flash_log_meta_t *meta)
     return result;
 }
 
+/*
+    * @brief  Load the log state from FRAM by reading both metadata slots and selecting the most recent valid one.
+    * @retval 1 on success, -1 if both slots are invalid.
+*/
 static int flash_log_state_load(void)
 {
     flash_log_meta_t a;
@@ -250,6 +316,10 @@ static int flash_log_state_load(void)
     return 1;
 }
 
+/*
+    * @brief  Save the current log state to FRAM, alternating between the two metadata slots.
+    * @retval 1 on success, -1 on failure.
+*/
 static int flash_log_state_save(void)
 {
     flash_log_meta_t meta;
@@ -265,6 +335,9 @@ static int flash_log_state_save(void)
     return flash_log_meta_write(addr, &meta);
 }
 
+/*
+    * @brief  Reset the log state to factory defaults (empty log, sequence starting at 1).
+*/
 static void flash_log_state_set_defaults(void)
 {
     g_log.write_index   = 0u;

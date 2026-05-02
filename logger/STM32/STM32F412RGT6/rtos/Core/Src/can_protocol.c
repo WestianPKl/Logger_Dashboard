@@ -17,6 +17,10 @@
 uint32_t tx_mailbox;
 volatile uint8_t counter = 0U;
 
+/*
+    * @brief  Send CAN frame 0x10 containing the device serial number and a rolling counter.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x10(void)
 {
     const device_info_t *info = device_info_get();
@@ -48,6 +52,10 @@ static int send_frame_0x10(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x11 containing firmware and hardware version information.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x11(void)
 {
     const device_info_t *info = device_info_get();
@@ -77,6 +85,10 @@ static int send_frame_0x11(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x12 containing the firmware build date.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x12(void)
 {
     CAN_TxHeaderTypeDef tx_header;
@@ -102,6 +114,10 @@ static int send_frame_0x12(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x13 containing the device production date.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x13(void)
 {
     const device_info_t *info = device_info_get();
@@ -130,6 +146,11 @@ static int send_frame_0x13(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x20 containing the two ADC channel readings.
+    *         Sends an error response if the ADC peripheral is not present or the buffer is too small.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x20(void)
 {
     CAN_TxHeaderTypeDef tx_header;
@@ -169,6 +190,11 @@ static int send_frame_0x20(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x30 containing SHT40 temperature and humidity data.
+    *         Sends an error response if the sensor is not present or data is unavailable.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x30(void)
 {
     CAN_TxHeaderTypeDef tx_header;
@@ -217,6 +243,11 @@ static int send_frame_0x30(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x31 containing BME280 temperature and humidity data.
+    *         Sends an error response if the sensor is not present or data is unavailable.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x31(void)
 {
     CAN_TxHeaderTypeDef tx_header;
@@ -265,6 +296,11 @@ static int send_frame_0x31(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x32 containing BME280 pressure data.
+    *         Sends an error response if the sensor is not present or data is unavailable.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x32(void)
 {
     CAN_TxHeaderTypeDef tx_header;
@@ -311,6 +347,11 @@ static int send_frame_0x32(void)
     return can_add_tx_message(&tx_header, tx_data, &tx_mailbox);
 }
 
+/*
+    * @brief  Send CAN frame 0x60 containing the current RTC date and time.
+    *         Sends an error response if the RTC data mutex cannot be acquired.
+    * @retval Result of can_add_tx_message: 1 on success, negative on failure.
+*/
 static int send_frame_0x60(void)
 {
     CAN_TxHeaderTypeDef tx_header;

@@ -5,6 +5,12 @@
 
 #define SPI_XFER_TIMEOUT_MS 100U
 
+/*
+    * @brief  Transfer a single byte over SPI1 using DMA; block until complete.
+    * @param  tx: Byte to transmit.
+    * @param  rx: Pointer where the received byte will be stored, or NULL to discard.
+    * @retval 1 on success, -1 on failure or timeout.
+*/
 static int spi1_xfer8(uint8_t tx, uint8_t *rx)
 {
     uint8_t rx_local = 0U;
@@ -34,16 +40,27 @@ static int spi1_xfer8(uint8_t tx, uint8_t *rx)
     return 1;
 }
 
+/*
+    * @brief  Assert the CS2 line (select the MX25 flash).
+*/
 static inline void mx25_select(void)
 {
     spi1_cs2_low();
 }
 
+/*
+    * @brief  Deassert the CS2 line (deselect the MX25 flash).
+*/
 static inline void mx25_deselect(void)
 {
     spi1_cs2_high();
 }
 
+/*
+    * @brief  Send a 32-bit address over SPI, MSB first.
+    * @param  addr: 32-bit address to send.
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_send_addr32(uint32_t addr)
 {
     if (spi1_xfer8((uint8_t)(addr >> 24), NULL) != 1) return -1;
@@ -53,6 +70,11 @@ static int mx25_send_addr32(uint32_t addr)
     return 1;
 }
 
+/*
+    * @brief  Read the MX25 status register.
+    * @param  sr: Pointer where the status byte will be stored.
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_read_status(uint8_t *sr)
 {
     uint8_t tmp = 0U;
@@ -76,6 +98,10 @@ static int mx25_read_status(uint8_t *sr)
     return 1;
 }
 
+/*
+    * @brief  Issue the Write Enable (WREN) command and verify the WEL bit is set.
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_write_enable(void)
 {
     uint8_t sr = 0U;
@@ -93,6 +119,11 @@ static int mx25_write_enable(void)
     return ((sr & MX25_SR_WEL) != 0U) ? 1 : -1;
 }
 
+/*
+    * @brief  Poll the WIP bit until the flash is ready, with a timeout.
+    * @param  timeout_ms: Maximum time to wait in milliseconds.
+    * @retval 1 when ready, -1 on failure or timeout.
+*/
 static int mx25_wait_ready(uint32_t timeout_ms)
 {
     uint8_t sr = 0U;
@@ -107,6 +138,10 @@ static int mx25_wait_ready(uint32_t timeout_ms)
     return -1;
 }
 
+/*
+    * @brief  Issue the RSTEN + RST sequence to software-reset the flash.
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_reset(void)
 {
     mx25_select();
@@ -127,6 +162,11 @@ static int mx25_reset(void)
     return 1;
 }
 
+/*
+    * @brief  Read the 3-byte JEDEC ID from the flash.
+    * @param  id: 3-element buffer for manufacturer, memory type, and capacity bytes.
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_read_id(uint8_t id[3])
 {
     if (id == NULL) return -1;
@@ -155,6 +195,13 @@ static int mx25_read_id(uint8_t id[3])
     return 1;
 }
 
+/*
+    * @brief  Program up to one page of data. Must not cross a page boundary.
+    * @param  addr: Start address within the flash.
+    * @param  src: Pointer to the data to program.
+    * @param  len: Number of bytes (1 .. MX25_PAGE_SIZE).
+    * @retval 1 on success, -1 on failure.
+*/
 static int mx25_page_program(uint32_t addr, const uint8_t *src, uint16_t len)
 {
     if ((src == NULL) || (len == 0U)) return -1;

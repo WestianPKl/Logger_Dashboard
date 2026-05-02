@@ -9,6 +9,12 @@
 
 #define SHT40_MEAS_TIME_MS  15U
 
+/*
+    * @brief  Compute the CRC-8 checksum used by Sensirion sensors (polynomial 0x31, init 0xFF).
+    * @param  data: Pointer to the data buffer.
+    * @param  len: Number of bytes to process.
+    * @retval The computed CRC-8 value.
+*/
 static uint8_t sht_crc8(const uint8_t *data, uint8_t len)
 {
     uint8_t crc = 0xFFU;
@@ -47,6 +53,13 @@ uint32_t sht40_read_serial_number(void)
            ((uint32_t)data[4]);
 }
 
+/*
+    * @brief  Read the raw uncompensated temperature and humidity ADC values from the SHT40 sensor.
+    *         Triggers a single-shot high-repeatability measurement and waits for the result.
+    * @param  rawT: Pointer where the raw 16-bit temperature ADC value will be stored.
+    * @param  rawRH: Pointer where the raw 16-bit humidity ADC value will be stored.
+    * @retval 1 on success, -1 on failure (I2C error or CRC mismatch).
+*/
 static int8_t sht40_read_raw(uint16_t *rawT, uint16_t *rawRH)
 {
     const uint8_t cmd = SHT40_CMD_SINGLE_SHOT_HIGHREP;

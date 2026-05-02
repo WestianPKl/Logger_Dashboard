@@ -1,11 +1,21 @@
 #include "mcp7940n.h"
 #include "i2c.h"
 
+/*
+    * @brief  Convert a binary value (0..99) to BCD format.
+    * @param  v: Binary value.
+    * @retval BCD-encoded value.
+*/
 static uint8_t bin2bcd(uint8_t v)
 {
     return (uint8_t)(((v / 10U) << 4) | (v % 10U));
 }
 
+/*
+    * @brief  Convert a BCD-encoded value to binary.
+    * @param  v: BCD value.
+    * @retval Binary value.
+*/
 static uint8_t bcd2bin(uint8_t v)
 {
     return (uint8_t)(((v >> 4) * 10U) + (v & 0x0FU));

@@ -18,6 +18,9 @@
 #define INFO_ADDR  0x080FF800U
 #define INFO_MAGIC 0x494E464FU
 
+/*
+    * @brief  Device information structure stored at a fixed flash address.
+*/
 typedef struct __attribute__((packed)) {
     uint32_t magic;
     uint32_t serial;
@@ -27,6 +30,10 @@ typedef struct __attribute__((packed)) {
     char     prod_date[10];
 } device_info_t;
 
+/*
+    * @brief  Return a pointer to the device_info_t structure in flash at INFO_ADDR.
+    * @retval Pointer to the device information (read-only).
+*/
 static inline const device_info_t* device_info_get(void)
 {
     return (const device_info_t*)INFO_ADDR;

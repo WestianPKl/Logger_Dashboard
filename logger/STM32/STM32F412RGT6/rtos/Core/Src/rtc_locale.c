@@ -1,10 +1,21 @@
 #include <stdint.h>
 
+/*
+    * @brief  Check if a given year is a leap year.
+    * @param  y: Full year (e.g., 2026).
+    * @retval 1 if leap year, 0 otherwise.
+*/
 static uint8_t is_leap(uint16_t y)
 {
     return ((y % 4U) == 0U && ((y % 100U) != 0U || (y % 400U) == 0U)) ? 1U : 0U;
 }
 
+/*
+    * @brief  Return the number of days in a given month.
+    * @param  y: Full year.
+    * @param  m: Month (1..12).
+    * @retval Number of days (28..31).
+*/
 static uint8_t days_in_month(uint16_t y, uint8_t m)
 {
     static const uint8_t dm[12] = {31,28,31,30,31,30,31,31,30,31,30,31};
@@ -13,6 +24,13 @@ static uint8_t days_in_month(uint16_t y, uint8_t m)
     return 31U;
 }
 
+/*
+    * @brief  Compute the ISO day of week (1=Monday..7=Sunday) for a given date using Tomohiko Sakamoto's algorithm.
+    * @param  y: Full year.
+    * @param  m: Month (1..12).
+    * @param  d: Day (1..31).
+    * @retval Day of week (1..7).
+*/
 static uint8_t dow_mon1(uint16_t y, uint8_t m, uint8_t d)
 {
     static const uint8_t t[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
@@ -23,6 +41,12 @@ static uint8_t dow_mon1(uint16_t y, uint8_t m, uint8_t d)
     return (uint8_t)w;
 }
 
+/*
+    * @brief  Find the date of the last Sunday in a given month (used for EU DST boundaries).
+    * @param  y: Full year.
+    * @param  m: Month (1..12).
+    * @retval Day of month of the last Sunday.
+*/
 static uint8_t last_sunday_of_month(uint16_t y, uint8_t m)
 {
     uint8_t last_day = days_in_month(y, m);
@@ -31,6 +55,10 @@ static uint8_t last_sunday_of_month(uint16_t y, uint8_t m)
     return (uint8_t)(last_day - back);
 }
 
+/*
+    * @brief  Compare two date/time tuples (year, month, day, hour).
+    * @retval -1 if first is earlier, 0 if equal, 1 if first is later.
+*/
 static int cmp_date_time(uint16_t y, uint8_t mo, uint8_t d, uint8_t h,
                          uint16_t y2, uint8_t mo2, uint8_t d2, uint8_t h2)
 {
@@ -41,6 +69,15 @@ static int cmp_date_time(uint16_t y, uint8_t mo, uint8_t d, uint8_t h,
     return 0;
 }
 
+/*
+    * @brief  Determine if a given UTC date/time falls within EU summer time (CEST).
+    *         DST starts last Sunday of March at 01:00 UTC, ends last Sunday of October at 01:00 UTC.
+    * @param  y: Full year.
+    * @param  mo: Month.
+    * @param  d: Day.
+    * @param  h: Hour (UTC).
+    * @retval 1 if DST is active, 0 otherwise.
+*/
 static uint8_t warsaw_is_dst_utc(uint16_t y, uint8_t mo, uint8_t d, uint8_t h)
 {
     if (mo < 3U || mo > 10U) return 0U;
@@ -58,6 +95,15 @@ static uint8_t warsaw_is_dst_utc(uint16_t y, uint8_t mo, uint8_t d, uint8_t h)
     }
 }
 
+/*
+    * @brief  Add a number of hours to a date/time, advancing the day/month/year and weekday as needed.
+    * @param  y: Pointer to full year.
+    * @param  mo: Pointer to month.
+    * @param  d: Pointer to day.
+    * @param  wd: Pointer to weekday.
+    * @param  h: Pointer to hour.
+    * @param  add: Number of hours to add.
+*/
 static void add_hours(uint16_t *y, uint8_t *mo, uint8_t *d, uint8_t *wd, uint8_t *h, uint8_t add)
 {
     uint16_t Y = *y; uint8_t M = *mo; uint8_t D = *d; uint8_t WD = *wd; uint8_t H = *h;

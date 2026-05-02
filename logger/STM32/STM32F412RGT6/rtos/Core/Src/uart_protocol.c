@@ -30,6 +30,15 @@ uint8_t uart2_tx_frame[FRAME_LEN_APP];
 uint8_t uart1_rx_buf[UART1_RX_BUFFER_SIZE];
 uint8_t uart1_tx_frame[FRAME_LEN_APP];
 
+/*
+    * @brief  Build and transmit a response frame over the selected UART via DMA.
+    * @param  status: Response status byte (STATUS_OK or ERROR_RESPONSE).
+    * @param  cmd: Command byte echoed from the request.
+    * @param  param: Parameter byte echoed from the request.
+    * @param  payload: Pointer to additional response data, or NULL.
+    * @param  payload_len: Length of the payload in bytes.
+    * @param  use_uart1: Non-zero to send via USART1, 0 for USART2.
+*/
 static void handle_response(uint8_t status, uint8_t cmd, uint8_t param,
                             const uint8_t *payload, uint32_t payload_len, uint8_t use_uart1)
 {

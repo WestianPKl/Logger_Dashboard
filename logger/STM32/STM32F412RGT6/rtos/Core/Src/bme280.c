@@ -1,3 +1,9 @@
+/*
+    * @brief  BME280 sensor driver for STM32F4 using SPI with DMA and FreeRTOS.
+    *         This driver provides functions to initialize the BME280 sensor, trigger measurements, and read compensated temperature, humidity, and pressure data.
+    *         It uses DMA for SPI transfers to minimize CPU load and FreeRTOS task notifications to synchronize SPI communication.
+*/
+
 #include "bme280.h"
 #include "spi.h"
 #include "FreeRTOS.h"
@@ -56,6 +62,15 @@ typedef struct
 static bme280_calib_t calib;
 static int32_t t_fine = 0;
 
+/*
+    * @brief  Perform a synchronous SPI transfer with the BME280 sensor using DMA.
+    *         This function initiates a DMA-based SPI transfer and waits for its completion
+    *         by blocking the calling task until a notification is received or a timeout occurs.
+    * @param  tx: Pointer to the transmit buffer containing data to send to the sensor.
+    * @param  rx: Pointer to the receive buffer where data from the sensor will be stored.
+    * @param  len: Length of the data to be transferred in bytes.
+    * @retval HAL status indicating success or failure of the SPI transfer.
+*/
 static HAL_StatusTypeDef spi1_xfer_sync(const uint8_t *tx, uint8_t *rx, uint16_t len)
 {
     if ((tx == NULL) || (rx == NULL) || (len == 0U)) {
@@ -82,6 +97,15 @@ static HAL_StatusTypeDef spi1_xfer_sync(const uint8_t *tx, uint8_t *rx, uint16_t
     return HAL_OK;
 }
 
+/*
+    * @brief  Read multiple registers from the BME280 sensor over SPI using DMA.
+    *         This function constructs a read command, initiates a DMA-based SPI transfer,
+    *         and waits for its completion. The received data is then copied to the provided buffer.
+    * @param  reg: The starting register address to read from.
+    * @param  data: Pointer to the buffer where the read data will be stored.
+    * @param  size: The number of bytes to read from the sensor.
+    * @retval 1 on success, -1 on failure (e.g., invalid parameters or SPI transfer error).
+*/
 static int8_t bme280_read_registers(uint8_t reg, uint8_t *data, uint32_t size)
 {
     uint32_t len;
@@ -108,6 +132,14 @@ static int8_t bme280_read_registers(uint8_t reg, uint8_t *data, uint32_t size)
     return 1;
 }
 
+/*
+    * @brief  Write a single byte to a register of the BME280 sensor over SPI using DMA.
+    *         This function constructs a write command, initiates a DMA-based SPI transfer,
+    *         and waits for its completion. The function returns success or failure status.
+    * @param  reg: The register address to write to.
+    * @param  value: The byte value to be written to the specified register.
+    * @retval 1 on success, -1 on failure (e.g., SPI transfer error).
+*/
 static int8_t bme280_write_register(uint8_t reg, uint8_t value)
 {
     uint8_t txbuf[2];
@@ -126,6 +158,14 @@ static int8_t bme280_write_register(uint8_t reg, uint8_t value)
     return 1;
 }
 
+/*
+    * @brief  Sign-extend a 12-bit value to a 16-bit signed integer.
+    *         This function takes a 12-bit value (stored in a 16-bit variable) and extends its sign
+    *         to produce a correctly signed 16-bit integer. It checks the most significant bit of the
+    *         12-bit value to determine if it is negative and performs the necessary bit manipulation.
+    * @param  v: The input value containing the 12-bit number to be sign-extended.
+    * @retval The sign-extended 16-bit integer result.
+*/
 static int16_t sign_extend_12(int16_t v)
 {
     if ((v & 0x0800) != 0) {
@@ -134,6 +174,12 @@ static int16_t sign_extend_12(int16_t v)
     return v;
 }
 
+/*
+    * @brief  Wait for the BME280 sensor to complete its non-volatile memory copy after a reset.
+    *         This function repeatedly reads the status register of the BME280 sensor to check if the
+    *         NVM copy is still in progress. It blocks the calling task until the copy is done or a timeout occurs.
+    * @retval 1 if the NVM copy is complete, -1 on error (e.g., SPI read failure or timeout).
+*/
 static int8_t bme280_wait_nvm_copy_done(void)
 {
     uint8_t status = 0U;
@@ -154,6 +200,12 @@ static int8_t bme280_wait_nvm_copy_done(void)
     return -1;
 }
 
+/*
+    * @brief  Wait for the BME280 sensor to complete its measurement after being triggered.
+    *         This function repeatedly reads the status register of the BME280 sensor to check if a measurement
+    *         is still in progress. It blocks the calling task until the measurement is done or a timeout occurs.
+    * @retval 1 if the measurement is complete, -1 on error (e.g., SPI read failure or timeout).
+*/
 static int8_t bme280_wait_measurement_done(void)
 {
     uint8_t status = 0U;
@@ -174,6 +226,12 @@ static int8_t bme280_wait_measurement_done(void)
     return -1;
 }
 
+/*
+    * @brief  Read the calibration data from the BME280 sensor and store it in a local structure.
+    *         This function reads the temperature, pressure, and humidity calibration parameters from the sensor's
+    *         non-volatile memory. The calibration data is essential for compensating the raw sensor readings to obtain accurate measurements.
+    * @retval 1 on success, -1 on failure (e.g., SPI read error).
+*/
 static int8_t bme280_read_calibration_data(void)
 {
     uint8_t data[26];
@@ -282,6 +340,15 @@ int8_t bme280_trigger_forced(void)
     return 1;
 }
 
+/*
+    * @brief  Read the raw pressure, temperature, and humidity data from the BME280 sensor.
+    *         This function reads the uncompensated raw ADC values for pressure, temperature, and humidity from the sensor's data registers.
+    *         The raw values are returned as integers, which can then be compensated using the calibration data to obtain accurate measurements.
+    * @param  adc_P: Pointer to an integer where the raw pressure ADC value will be stored.
+    * @param  adc_T: Pointer to an integer where the raw temperature ADC value will be stored.
+    * @param  adc_H: Pointer to an integer where the raw humidity ADC value will be stored.
+    * @retval 1 on success, -1 on failure (e.g., SPI communication error or invalid parameters).
+*/
 static int8_t bme280_read_raw(int32_t *adc_P, int32_t *adc_T, int32_t *adc_H)
 {
     uint8_t data[8];
@@ -308,6 +375,13 @@ static int8_t bme280_read_raw(int32_t *adc_P, int32_t *adc_T, int32_t *adc_H)
     return 1;
 }
 
+/*
+    * @brief  Compensate the raw temperature ADC value to obtain the actual temperature in hundredths of degrees Celsius.
+    *         This function uses the calibration data read from the BME280 sensor to compensate the raw temperature ADC value.
+    *         The compensation algorithm is based on the formulas provided in the BME280 datasheet, which involve intermediate variables and fixed-point arithmetic.
+    * @param  adc_T: The raw temperature ADC value read from the sensor.
+    * @retval The compensated temperature in hundredths of degrees Celsius (e.g., a return value of 2534 represents 25.34°C).
+*/
 static int32_t bme280_compensate_T_x100(int32_t adc_T)
 {
     int32_t var1, var2, T;
@@ -325,6 +399,13 @@ static int32_t bme280_compensate_T_x100(int32_t adc_T)
     return T;
 }
 
+/* 
+    * @brief  Compensate the raw humidity ADC value to obtain the actual relative humidity in Q22.10 format (units of 1/1024 %).
+    *         This function uses the calibration data read from the BME280 sensor to compensate the raw humidity ADC value.
+    *         The compensation algorithm is based on the formulas provided in the BME280 datasheet, which involve intermediate variables and fixed-point arithmetic.
+    * @param  adc_H: The raw humidity ADC value read from the sensor.
+    * @retval The compensated relative humidity in Q22.10 format (e.g., a return value of 47445 represents 47445/1024 = 46.33% RH).
+*/
 static uint32_t bme280_compensate_H_x1024(int32_t adc_H)
 {
     int32_t v_x1_u32r;
@@ -354,6 +435,13 @@ static uint32_t bme280_compensate_H_x1024(int32_t adc_H)
     return (uint32_t)(v_x1_u32r >> 12);
 }
 
+/*
+    * @brief  Compensate the raw pressure ADC value to obtain the actual pressure in Q24.8 format (units of 1/256 Pa).
+    *         This function uses the calibration data read from the BME280 sensor to compensate the raw pressure ADC value.
+    *         The compensation algorithm is based on the formulas provided in the BME280 datasheet, which involve intermediate variables and fixed-point arithmetic.
+    * @param  adc_P: The raw pressure ADC value read from the sensor.
+    * @retval The compensated pressure in Q24.8 format (divide by 256 to get Pa), or 0xFFFFFFFF on error.
+*/
 static uint32_t bme280_compensate_P_q24_8(int32_t adc_P)
 {
     int64_t var1, var2, p;

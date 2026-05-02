@@ -1,5 +1,6 @@
 #include "support.h"
 #include <stddef.h>
+#include <string.h>
 
 uint8_t crc8_atm(const uint8_t *data, uint32_t len)
 {
@@ -51,4 +52,95 @@ uint32_t crc32(const uint8_t *data, uint32_t len)
     }
 
     return crc;
+}
+
+
+int8_t find_output_channel_id(const char *name, uint8_t *channel_id)
+{
+    if (name == NULL || channel_id == NULL) {
+        return 0;
+    }
+
+    if (strcmp(name, "LED1") == 0) {
+        *channel_id = 0x01;
+        return 1;
+    }
+    else if (strcmp(name, "LED2") == 0) {
+        *channel_id = 0x02;
+        return 1;
+    }
+    else if (strcmp(name, "PB12") == 0) {
+        *channel_id = 0x03;
+        return 1;
+    }
+    else if (strcmp(name, "PC0") == 0) {
+        *channel_id = 0x04;
+        return 1;
+    }
+    else if (strcmp(name, "PC1") == 0) {
+        *channel_id = 0x05;
+        return 1;
+    }
+    else if (strcmp(name, "PC2") == 0) {
+        *channel_id = 0x06;
+        return 1;
+    }
+    else if (strcmp(name, "PC3") == 0) {
+        *channel_id = 0x07;
+        return 1;
+    }
+    else if (strcmp(name, "ESP32_STATUS") == 0) {
+        *channel_id = 0x01;
+        return 1;
+    }
+
+    return 0;
+}
+
+int8_t find_pwm_channel_id(const char *name, uint8_t *channel_id)
+{
+    if (name == NULL || channel_id == NULL) {
+        return 0;
+    }
+
+    if (strcmp(name, "TIM1_CH1") == 0) {
+        *channel_id = 0x01;
+        return 1;
+    }
+    else if (strcmp(name, "TIM2_CH3") == 0) {
+        *channel_id = 0x02;
+        return 1;
+    }
+    else if (strcmp(name, "TIM4_CH3") == 0) {
+        *channel_id = 0x03;
+        return 1;
+    }
+    else if (strcmp(name, "TIM4_CH4") == 0) {
+        *channel_id = 0x04;
+        return 1;
+    }
+
+    return 0;
+}
+
+int8_t find_input_channel_id(const char *name, uint8_t *channel_id)
+{
+    if (name == NULL || channel_id == NULL) {
+        return 0;
+    }
+
+    if (strcmp(name, "BTN1") == 0) {
+        *channel_id = 0x01;
+        return 1;
+    } 
+    else if (strcmp(name, "BTN2") == 0) {
+        *channel_id = 0x02;
+        return 1;
+    } 
+    else if (strcmp(name, "ESP32_STATUS") == 0) {
+        *channel_id = 0x03;
+        return 1;
+    }
+
+    return 0;
 }
